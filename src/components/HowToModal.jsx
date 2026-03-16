@@ -101,7 +101,6 @@ export default function HowToModal({ onClose }) {
               <li>Use the scroll wheel (or pinch on mobile) to zoom in and out.</li>
               <li>Click the <strong>×</strong> on a card to remove that person. You will be asked to confirm first.</li>
               <li>Changes are saved automatically and shared in real time — anyone with the link sees the same tree.</li>
-              <li>Use <strong>Export</strong> to download a backup as a JSON file, and <strong>Import</strong> to restore it.</li>
             </ul>
           </section>
 

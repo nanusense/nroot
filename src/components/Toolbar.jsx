@@ -66,26 +66,28 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
           Auto-arrange
         </button>
 
-        <div className="toolbar__divider" />
-
-        <button className="btn btn--ghost" onClick={onExport} title="Export tree as JSON">
-          Export
-        </button>
-
-        <button
-          className="btn btn--ghost"
-          onClick={() => importRef.current?.click()}
-          title="Import tree from JSON"
-        >
-          Import
-        </button>
-        <input
-          ref={importRef}
-          type="file"
-          accept=".json,application/json"
-          onChange={handleImportChange}
-          style={{ display: 'none' }}
-        />
+        {isAdmin && (
+          <>
+            <div className="toolbar__divider" />
+            <button className="btn btn--ghost" onClick={onExport} title="Export tree as JSON">
+              Export
+            </button>
+            <button
+              className="btn btn--ghost"
+              onClick={() => importRef.current?.click()}
+              title="Import tree from JSON"
+            >
+              Import
+            </button>
+            <input
+              ref={importRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleImportChange}
+              style={{ display: 'none' }}
+            />
+          </>
+        )}
 
         <div className="toolbar__divider" />
 
@@ -144,13 +146,17 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
             <button className="btn btn--secondary" onClick={() => { onAutoArrange(); closeMenu() }}>
               Auto-arrange
             </button>
-            <div className="toolbar__divider" />
-            <button className="btn btn--ghost" onClick={() => { onExport(); closeMenu() }}>
-              Export
-            </button>
-            <button className="btn btn--ghost" onClick={() => { importRef.current?.click(); closeMenu() }}>
-              Import
-            </button>
+            {isAdmin && (
+              <>
+                <div className="toolbar__divider" />
+                <button className="btn btn--ghost" onClick={() => { onExport(); closeMenu() }}>
+                  Export
+                </button>
+                <button className="btn btn--ghost" onClick={() => { importRef.current?.click(); closeMenu() }}>
+                  Import
+                </button>
+              </>
+            )}
             <div className="toolbar__divider" />
             <div className="toolbar__zoom">
               <button className="btn btn--icon" onClick={() => { zoomIn(); closeMenu() }}>+</button>
