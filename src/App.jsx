@@ -321,6 +321,11 @@ function FamilyTreeApp() {
         direction={modalDirection}
         allNodes={nodes}
       />
+
+      <footer className="app-footer">
+        Created by Sandeep Nanu. For a custom family tree like this, write to{' '}
+        <a href="mailto:shiftingradius@gmail.com">shiftingradius@gmail.com</a>
+      </footer>
     </div>
   )
 }

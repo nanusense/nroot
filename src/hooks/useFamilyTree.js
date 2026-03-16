@@ -202,26 +202,24 @@ export function useFamilyTree({ visitorId } = {}) {
 
     const autoSiblingEdges = []
     if (direction === 'below' && sourceId) {
-      // Connect new child to the LAST existing sibling only (chain pattern: C1→C2→C3).
-      // Connecting every existing sibling to the new one creates skip-edges (C1→C3)
-      // that visually cross over the middle sibling, so we only link the end of the chain.
+      // Connect new child to ALL existing siblings (full cross-link so every sibling
+      // pair has a direct edge and hover highlights work correctly).
       const existingChildren = edges.filter(
         (e) =>
           e.source === sourceId &&
           (e.sourceHandle === 'bottom-source' || e.sourceHandle == null) &&
           !e.data?.isSibling
       )
-      if (existingChildren.length > 0) {
-        const lastChild = existingChildren[existingChildren.length - 1]
+      existingChildren.forEach((e) => {
         autoSiblingEdges.push({
-          id: `sib_${lastChild.target}_${id}`,
-          source: lastChild.target, target: id,
+          id: `sib_${e.target}_${id}`,
+          source: e.target, target: id,
           sourceHandle: 'right-source', targetHandle: 'left-target',
           type: 'straight',
           style: { stroke: EDGE_COLOR.sibling, strokeWidth: 1.5, strokeDasharray: '6 4' },
           data: { isSibling: true },
         })
-      }
+      })
 
       // Connect new child to existing spouses of the parent
       spousesOf(sourceId).forEach((spouseId) => {
