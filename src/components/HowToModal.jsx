@@ -87,7 +87,7 @@ export default function HowToModal({ onClose }) {
           <section className="howto-section">
             <h3 className="howto-section__title">Auto-arrange</h3>
             <p>
-              If the tree looks cluttered after many additions, click <strong>Auto-arrange</strong>
+              If the tree looks cluttered after many additions, click <strong>Auto-arrange</strong>{' '}
               in the toolbar. It repositions everyone into clean generation rows,
               grandparents at the top, parents in the middle, children at the bottom.
             </p>
