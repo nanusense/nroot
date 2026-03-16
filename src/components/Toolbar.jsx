@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState } from 'react'
 import { useReactFlow } from '@xyflow/react'
 
-export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExport, onImport, importJSON, isAdmin, onUnlockAdmin, onLockAdmin }) {
+export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExport, onImport, importJSON, isAdmin, onUnlockAdmin, onLockAdmin, onHowTo }) {
   const { zoomIn, zoomOut, fitView } = useReactFlow()
   const importRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -97,6 +97,12 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
 
         <div className="toolbar__divider" />
 
+        <button className="btn btn--ghost" onClick={onHowTo} title="How to use">
+          How to
+        </button>
+
+        <div className="toolbar__divider" />
+
         {/* Admin lock/unlock */}
         {isAdmin ? (
           <button
@@ -151,6 +157,10 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
               <button className="btn btn--icon" onClick={() => { fitView(); closeMenu() }}>⊡</button>
               <button className="btn btn--icon" onClick={() => { zoomOut(); closeMenu() }}>−</button>
             </div>
+            <div className="toolbar__divider" />
+            <button className="btn btn--ghost" onClick={() => { onHowTo(); closeMenu() }}>
+              How to
+            </button>
             <div className="toolbar__divider" />
             {isAdmin ? (
               <button className="btn btn--ghost" onClick={() => { onLockAdmin(); closeMenu() }}>

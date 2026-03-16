@@ -14,6 +14,7 @@ import { useFamilyTree } from './hooks/useFamilyTree'
 import PersonNode from './components/PersonNode'
 import AddPersonModal from './components/AddPersonModal'
 import Toolbar from './components/Toolbar'
+import HowToModal from './components/HowToModal'
 import './App.css'
 
 const nodeTypes = { person: PersonNode }
@@ -64,6 +65,8 @@ function FamilyTreeApp() {
   const [modalOpen, setModalOpen] = useState(false)
   const [modalSourceNode, setModalSourceNode] = useState(null)
   const [modalDirection, setModalDirection] = useState('')
+
+  const [howToOpen, setHowToOpen] = useState(false)
 
   // Hover state — drives immediate-kin dimming
   const [hoveredNodeId, setHoveredNodeId] = useState(null)
@@ -310,6 +313,7 @@ function FamilyTreeApp() {
         isAdmin={isAdmin}
         onUnlockAdmin={unlockAdmin}
         onLockAdmin={lockAdmin}
+        onHowTo={() => setHowToOpen(true)}
       />
 
       <AddPersonModal
@@ -321,6 +325,8 @@ function FamilyTreeApp() {
         direction={modalDirection}
         allNodes={nodes}
       />
+
+      {howToOpen && <HowToModal onClose={() => setHowToOpen(false)} />}
 
       <footer className="app-footer">
         Created by Sandeep Nanu. For a custom family tree like this, write to{' '}
