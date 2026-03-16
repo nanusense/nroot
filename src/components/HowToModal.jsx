@@ -12,7 +12,7 @@ export default function HowToModal({ onClose }) {
             <h3 className="howto-section__title">Getting started</h3>
             <p>
               Each card on the canvas represents one person. Hover over any card to see
-              the four small arrow buttons around it — these let you add a new person
+              the four small arrow buttons around it, which let you add a new person
               in that relationship direction. Double-click a card to edit the name or
               birth year.
             </p>
@@ -61,7 +61,7 @@ export default function HowToModal({ onClose }) {
           <section className="howto-section">
             <h3 className="howto-section__title">Linking people who are already in the tree</h3>
             <p>
-              Sometimes a connection is missing — for example, a cousin who was added
+              Sometimes a connection is missing, for example, a cousin who was added
               independently, or a second marriage. To link two existing people:
             </p>
             <ol className="howto-steps">
@@ -78,7 +78,7 @@ export default function HowToModal({ onClose }) {
             <h3 className="howto-section__title">Hover highlights</h3>
             <p>
               Hovering over a person dims everyone else and lights up only their
-              immediate family — parents, spouse, children, and siblings. Clicking a
+              immediate family: parents, spouse, children, and siblings. Clicking a
               person also shows extended family: <span className="howto-tag howto-tag--cousin">cousins</span> get a purple ring and <span className="howto-tag howto-tag--nephew">nephews / nieces</span> get a blue ring.
             </p>
           </section>
@@ -88,7 +88,7 @@ export default function HowToModal({ onClose }) {
             <h3 className="howto-section__title">Auto-arrange</h3>
             <p>
               If the tree looks cluttered after many additions, click <strong>Auto-arrange</strong>
-              in the toolbar. It repositions everyone into clean generation rows —
+              in the toolbar. It repositions everyone into clean generation rows,
               grandparents at the top, parents in the middle, children at the bottom.
             </p>
           </section>
@@ -100,7 +100,7 @@ export default function HowToModal({ onClose }) {
               <li>You can drag any card to reposition it freely on the canvas.</li>
               <li>Use the scroll wheel (or pinch on mobile) to zoom in and out.</li>
               <li>Click the <strong>×</strong> on a card to remove that person. You will be asked to confirm first.</li>
-              <li>Changes are saved automatically and shared in real time — anyone with the link sees the same tree.</li>
+              <li>Changes are saved automatically and shared in real time, and anyone with the link sees the same tree.</li>
             </ul>
           </section>
 
