@@ -105,6 +105,11 @@ export default function HowToModal({ onClose }) {
           </section>
 
         </div>
+
+        <footer className="howto-footer">
+          Created by Sandeep Nanu. For a custom family tree like this, or to report bugs or request changes, write to{' '}
+          <a href="mailto:shiftingradius@gmail.com">shiftingradius@gmail.com</a>
+        </footer>
       </div>
     </div>
   )
