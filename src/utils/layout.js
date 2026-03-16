@@ -14,10 +14,10 @@
 
 const NODE_W     = 180   // must match PersonNode rendered width
 const NODE_H     = 96    // must match PersonNode rendered height
-const H_GAP      = 20    // horizontal gap between sibling subtrees
-const V_GAP      = 80    // vertical gap between generations
-const COUPLE_GAP = 16    // horizontal gap between two spouses
-const ROOT_GAP   = 60    // extra breathing room between separate root families
+const H_GAP      = 60    // horizontal gap between sibling subtrees
+const V_GAP      = 130   // vertical gap between generations
+const COUPLE_GAP = 40    // horizontal gap between two spouses
+const ROOT_GAP   = 100   // extra breathing room between separate root families
 
 // ─── Edge classifiers ────────────────────────────────────────────────────────
 

@@ -52,9 +52,32 @@ export function useFamilyTree({ visitorId } = {}) {
   // Initial load from Supabase
   useEffect(() => {
     loadTree().then(({ nodes: n, edges: e }) => {
+      // Self-healing: remove spouseChild edges that have no valid step-parent relationship.
+      // A valid sc edge A→C requires: a parent P where P→C exists AND a real spouse edge A↔P.
+      const isSibE = (edge) => edge.data?.isSibling || !!edge.style?.strokeDasharray
+      const parentOf = {}   // childId → Set of parentIds
+      e.forEach(edge => {
+        if (edge.sourceHandle === 'bottom-source' && edge.targetHandle === 'top-target' && !edge.data?.isSpouseChild) {
+          if (!parentOf[edge.target]) parentOf[edge.target] = new Set()
+          parentOf[edge.target].add(edge.source)
+        }
+      })
+      const isRealSpouse = (a, b) => e.some(edge =>
+        edge.sourceHandle === 'right-source' && edge.targetHandle === 'left-target' &&
+        !isSibE(edge) &&
+        ((edge.source === a && edge.target === b) || (edge.source === b && edge.target === a))
+      )
+      const cleanedEdges = e.filter(edge => {
+        if (!edge.data?.isSpouseChild) return true
+        const parents = parentOf[edge.target]
+        if (!parents) return false  // child has no known parent → remove orphan sc edge
+        return [...parents].some(p => isRealSpouse(edge.source, p))
+      })
+      const hadBadEdges = cleanedEdges.length < e.length
       setNodes(n)
-      setEdges(e)
+      setEdges(cleanedEdges)
       setLoading(false)
+      if (hadBadEdges) saveTree(n, cleanedEdges)
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -138,13 +161,15 @@ export function useFamilyTree({ visitorId } = {}) {
     }
 
     // Helper: find spouses of a given person (nodes connected via horizontal edges)
+    // Excludes sibling edges — detected by data.isSibling flag OR strokeDasharray style
     const spousesOf = (personId) => {
       const spouseIds = []
       edges.forEach((e) => {
-        if (e.sourceHandle === 'right-source' && e.targetHandle === 'left-target' && !e.data?.isSibling) {
-          if (e.source === personId) spouseIds.push(e.target)
-          else if (e.target === personId) spouseIds.push(e.source)
-        }
+        if (e.sourceHandle !== 'right-source' || e.targetHandle !== 'left-target') return
+        const isSib = e.data?.isSibling || !!e.style?.strokeDasharray
+        if (isSib) return
+        if (e.source === personId) spouseIds.push(e.target)
+        else if (e.target === personId) spouseIds.push(e.source)
       })
       return spouseIds
     }
