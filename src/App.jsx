@@ -104,11 +104,21 @@ function FamilyTreeApp() {
     const parentIds  = new Set()  // parents of hovered
     const spouseEdge = isSpouseEdgeGlobal
 
+    // Guard: only follow isSpouseChild edges from a node that actually has a real
+    // spouse edge (not a sibling). This filters out bad edges created by a previous
+    // bug where spousesOf() didn't exclude sibling edges (same handles).
+    const hoveredHasRealSpouse = edges.some(e =>
+      e.sourceHandle === 'right-source' && e.targetHandle === 'left-target' &&
+      !isSibEdge(e) &&
+      (e.source === hoveredNodeId || e.target === hoveredNodeId)
+    )
+
     edges.forEach(e => {
-      // SpouseChild edges (Ranji→Dhruv when Dhruv was added as Roshi's son):
-      // skip for sibling/parent classification but still highlight the child.
+      // SpouseChild edges (e.g. step-parent → child):
+      // only follow if the hovered node has a real spouse (guards against bad data
+      // where siblings were incorrectly tagged as co-parents).
       if (e.data?.isSpouseChild) {
-        if (e.source === hoveredNodeId) set.add(e.target)
+        if (e.source === hoveredNodeId && hoveredHasRealSpouse) set.add(e.target)
         return
       }
 

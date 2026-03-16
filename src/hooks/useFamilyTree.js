@@ -141,7 +141,7 @@ export function useFamilyTree({ visitorId } = {}) {
     const spousesOf = (personId) => {
       const spouseIds = []
       edges.forEach((e) => {
-        if (e.sourceHandle === 'right-source' && e.targetHandle === 'left-target') {
+        if (e.sourceHandle === 'right-source' && e.targetHandle === 'left-target' && !e.data?.isSibling) {
           if (e.source === personId) spouseIds.push(e.target)
           else if (e.target === personId) spouseIds.push(e.source)
         }
