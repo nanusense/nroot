@@ -339,6 +339,7 @@ function FamilyTreeApp() {
       {howToOpen && <HowToModal onClose={() => setHowToOpen(false)} />}
 
       <footer className="app-footer">
+        Best viewed on a large screen.{' '}
         Created by Sandeep Nanu. For a custom family tree like this, write to{' '}
         <a href="mailto:shiftingradius@gmail.com">shiftingradius@gmail.com</a>
       </footer>
