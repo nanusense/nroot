@@ -301,7 +301,7 @@ function FamilyTreeApp() {
           type: 'smoothstep',
           style: { stroke: '#c4a882', strokeWidth: 2 },
         }}
-        proOptions={{ hideAttribution: false }}
+        proOptions={{ hideAttribution: true }}
       >
         <Background color="#1e3322" gap={28} size={1.5} variant="dots" />
         <Controls style={{ bottom: 24, left: 24 }} />
