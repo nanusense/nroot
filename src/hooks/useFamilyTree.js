@@ -308,6 +308,16 @@ export function useFamilyTree({ visitorId } = {}) {
   const linkPersons = useCallback(({ sourceId, targetId, direction, relation }) => {
     if (!sourceId || !targetId || sourceId === targetId) return
 
+    // Block sibling link when a parent-child edge already exists between these two nodes
+    if (direction === 'left') {
+      const alreadyParentChild = edges.some(e =>
+        ((e.source === sourceId && e.target === targetId) ||
+         (e.source === targetId && e.target === sourceId)) &&
+        e.sourceHandle === 'bottom-source'
+      )
+      if (alreadyParentChild) return
+    }
+
     let layoutDir = direction
     if (direction === 'right') {
       const rightOccupied = edges.some(
@@ -417,6 +427,14 @@ export function useFamilyTree({ visitorId } = {}) {
     })
   }, [setNodes, setEdges, scheduleSave])
 
+  const deleteEdge = useCallback((edgeId) => {
+    setEdges((eds) => {
+      const updated = eds.filter(e => e.id !== edgeId)
+      scheduleSave(nodes, updated)
+      return updated
+    })
+  }, [nodes, setEdges, scheduleSave])
+
   const autoArrange = useCallback(() => {
     setNodes((nds) => {
       const arranged = applyDagreLayout(nds, edges)
@@ -434,7 +452,7 @@ export function useFamilyTree({ visitorId } = {}) {
   return {
     nodes, edges, loading,
     onNodesChange, onEdgesChange, onConnect,
-    addPerson, linkPersons, updatePerson, deletePerson, autoArrange, replaceTree,
+    addPerson, linkPersons, updatePerson, deletePerson, deleteEdge, autoArrange, replaceTree,
     exportJSON: () => exportJSON(nodes, edges),
     importJSON,
   }

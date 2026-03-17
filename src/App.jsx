@@ -62,6 +62,7 @@ function FamilyTreeApp() {
     linkPersons,
     updatePerson,
     deletePerson,
+    deleteEdge,
     autoArrange,
     replaceTree,
     exportJSON,
@@ -228,6 +229,13 @@ function FamilyTreeApp() {
     }
   }, [getNode, setCenter])
 
+  const onEdgeClick = useCallback((_, edge) => {
+    if (!isAdmin) return
+    if (window.confirm(`Remove this "${edge.label || 'connection'}" relationship?`)) {
+      deleteEdge(edge.id)
+    }
+  }, [isAdmin, deleteEdge])
+
   if (loading) {
     return (
       <div className="app app--loading">
@@ -247,6 +255,7 @@ function FamilyTreeApp() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onEdgeClick={onEdgeClick}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.3 }}
