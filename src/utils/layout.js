@@ -120,11 +120,16 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
   while (changed && guard++ < 500) {
     changed = false
 
-    // (a) Spouses → same generation
+    // (a) Spouses → same generation, but never above what their parents allow.
+    // If both spouses have parents and those parents place them at different
+    // generations (e.g. a cross-generational marriage), each stays at their
+    // parent-defined generation so that siblings aren't displaced.
     Object.entries(spouseOf).forEach(([a, b]) => {
       const maxG = Math.max(gen[a] ?? 0, gen[b] ?? 0)
-      if ((gen[a] ?? -1) < maxG) { gen[a] = maxG; changed = true }
-      if ((gen[b] ?? -1) < maxG) { gen[b] = maxG; changed = true }
+      const aOk = (parentsOf[a] ?? []).every(p => (gen[p] ?? 0) + 1 >= maxG)
+      const bOk = (parentsOf[b] ?? []).every(p => (gen[p] ?? 0) + 1 >= maxG)
+      if (aOk && (gen[a] ?? -1) < maxG) { gen[a] = maxG; changed = true }
+      if (bOk && (gen[b] ?? -1) < maxG) { gen[b] = maxG; changed = true }
     })
 
     // (b) Parentless nodes inherit gen from sibling-edge partner
@@ -378,8 +383,32 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
     }
   }
 
-  // ── 9. Eliminate per-row overlaps ───────────────────────────────────────────
+  // ── 9. Re-centre parents over their children ────────────────────────────────
+  // The recursive top-down placement can leave parents misaligned when a child
+  // was already placed by another branch.  Run this BEFORE overlap resolution
+  // so that step 10 (which only shifts rightward) is the final authority on
+  // horizontal positions — preventing re-centering from undoing overlap fixes.
+
+  for (let g = maxGen - 1; g >= 0; g--) {
+    nodes.forEach(n => {
+      if (gen[n.id] !== g || pos[n.id] == null) return
+      const kids = unitKids(n.id).filter(k => pos[k] != null)
+      if (!kids.length) return
+      const kidsLeft    = Math.min(...kids.map(k => pos[k].x))
+      const kidsRight   = Math.max(...kids.map(k => pos[k].x + NODE_W))
+      const kidsCenterX = (kidsLeft + kidsRight) / 2
+      const selfCenterX = pos[n.id].x + NODE_W / 2
+      if (Math.abs(kidsCenterX - selfCenterX) <= NODE_W * 0.5) return
+      const dx = kidsCenterX - selfCenterX
+      const sp = spouseOf[n.id]
+      pos[n.id] = { x: pos[n.id].x + dx, y: g * ROW_H }
+      if (sp && pos[sp] != null) pos[sp] = { x: pos[sp].x + dx, y: g * ROW_H }
+    })
+  }
+
+  // ── 10. Eliminate per-row overlaps ──────────────────────────────────────────
   // 10 passes so cascading shifts in large trees fully settle.
+  // Runs after re-centering so any overlaps it introduces are cleaned up here.
 
   for (let pass = 0; pass < 10; pass++) {
     const rowMap = new Map()
@@ -405,28 +434,6 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
       }
     }
     if (!moved) break
-  }
-
-  // ── 10. Re-centre parents displaced by overlap resolution ──────────────────
-  // Step 9 shifts child subtrees right but leaves their parents in place.
-  // This pass slides parents back over their actual children with a tight
-  // threshold so only genuinely displaced parents move.
-
-  for (let g = maxGen - 1; g >= 0; g--) {
-    nodes.forEach(n => {
-      if (gen[n.id] !== g || pos[n.id] == null) return
-      const kids = unitKids(n.id).filter(k => pos[k] != null)
-      if (!kids.length) return
-      const kidsLeft    = Math.min(...kids.map(k => pos[k].x))
-      const kidsRight   = Math.max(...kids.map(k => pos[k].x + NODE_W))
-      const kidsCenterX = (kidsLeft + kidsRight) / 2
-      const selfCenterX = pos[n.id].x + NODE_W / 2
-      if (Math.abs(kidsCenterX - selfCenterX) <= NODE_W * 0.5) return
-      const dx = kidsCenterX - selfCenterX
-      const sp = spouseOf[n.id]
-      pos[n.id] = { x: pos[n.id].x + dx, y: g * ROW_H }
-      if (sp && pos[sp] != null) pos[sp] = { x: pos[sp].x + dx, y: g * ROW_H }
-    })
   }
 
   // ── 11. Return updated nodes ─────────────────────────────────────────────────
