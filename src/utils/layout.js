@@ -88,11 +88,19 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
 
   const gen = {}
 
-  // Seed: nodes with no parents start at generation 0
-  nodes.forEach(n => { if (!parentsOf[n.id]?.length) gen[n.id] = 0 })
+  // Nodes with an admin-set genOverride are pinned to that generation (1-based
+  // display value converted to 0-based internally). They are seeded first so
+  // that BFS propagates FROM their fixed position, not INTO it.
+  const overridden = new Set(
+    nodes.filter(n => n.data?.genOverride != null).map(n => n.id)
+  )
+  nodes.forEach(n => {
+    if (n.data?.genOverride != null) gen[n.id] = n.data.genOverride - 1
+    else if (!parentsOf[n.id]?.length) gen[n.id] = 0
+  })
 
   // BFS downward through parent-child edges
-  let bfsQ = nodes.filter(n => !parentsOf[n.id]?.length).map(n => n.id)
+  let bfsQ = nodes.filter(n => gen[n.id] != null).map(n => n.id)
   while (bfsQ.length) {
     const nxt = []
     bfsQ.forEach(id => {
@@ -114,33 +122,31 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
   //      preventing the "parent 4 levels above child" bug.
   //   c) A child's generation must be at least parent's gen + 1
   //
-  // Rule (b) is what correctly places orphaned subtrees (e.g. a grandparent
-  // who was added with only a sibling edge to a cousin already in the tree).
+  // Overridden nodes are skipped in rules (a) and (b) so their pinned
+  // generation cannot be shifted by spouse or sibling normalization.
   let changed = true, guard = 0
   while (changed && guard++ < 500) {
     changed = false
 
-    // (a) Spouses → same generation, but never above what their parents allow.
-    // If both spouses have parents and those parents place them at different
-    // generations (e.g. a cross-generational marriage), each stays at their
-    // parent-defined generation so that siblings aren't displaced.
+    // (a) Spouses → same generation, but never above what their parents allow,
+    // and never changing an admin-pinned node.
     Object.entries(spouseOf).forEach(([a, b]) => {
       const maxG = Math.max(gen[a] ?? 0, gen[b] ?? 0)
-      const aOk = (parentsOf[a] ?? []).every(p => (gen[p] ?? 0) + 1 >= maxG)
-      const bOk = (parentsOf[b] ?? []).every(p => (gen[p] ?? 0) + 1 >= maxG)
+      const aOk = !overridden.has(a) && (parentsOf[a] ?? []).every(p => (gen[p] ?? 0) + 1 >= maxG)
+      const bOk = !overridden.has(b) && (parentsOf[b] ?? []).every(p => (gen[p] ?? 0) + 1 >= maxG)
       if (aOk && (gen[a] ?? -1) < maxG) { gen[a] = maxG; changed = true }
       if (bOk && (gen[b] ?? -1) < maxG) { gen[b] = maxG; changed = true }
     })
 
-    // (b) Parentless nodes inherit gen from sibling-edge partner
+    // (b) Parentless nodes inherit gen from sibling-edge partner (not overridden nodes)
     sibEdges.forEach(e => {
       const aHasParents = (parentsOf[e.source]?.length ?? 0) > 0
       const bHasParents = (parentsOf[e.target]?.length ?? 0) > 0
-      if (!aHasParents) {
+      if (!aHasParents && !overridden.has(e.source)) {
         const want = gen[e.target] ?? 0
         if ((gen[e.source] ?? -1) < want) { gen[e.source] = want; changed = true }
       }
-      if (!bHasParents) {
+      if (!bHasParents && !overridden.has(e.target)) {
         const want = gen[e.source] ?? 0
         if ((gen[e.target] ?? -1) < want) { gen[e.target] = want; changed = true }
       }

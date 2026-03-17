@@ -30,7 +30,8 @@ const HANDLE_DIRS = [
 ]
 
 function PersonNode({ id, data, selected }) {
-  const { name, yearOfBirth, onAdd, onDelete, onUpdate, onHover, onHoverEnd, dimmed, isFocus, kinRole, canDelete } = data
+  const { name, yearOfBirth, onAdd, onDelete, onUpdate, onHover, onHoverEnd, dimmed, isFocus, kinRole, canDelete,
+          isAdmin, genLevel, genOverride, onGenChange } = data
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
@@ -169,6 +170,25 @@ function PersonNode({ id, data, selected }) {
             <button className="person-node__edit-btn person-node__edit-btn--save" onClick={commitEdit} title="Save (Enter)">✓</button>
             <button className="person-node__edit-btn person-node__edit-btn--cancel" onClick={cancelEdit} title="Cancel (Esc)">✕</button>
           </div>
+        </div>
+      )}
+
+      {/* Admin: generation level badge with ±1 controls */}
+      {isAdmin && (
+        <div className="person-node__gen">
+          <button
+            className="person-node__gen-btn"
+            title="Move up one generation"
+            onMouseDown={e => { e.stopPropagation(); onGenChange?.(-1) }}
+          >−</button>
+          <span className={`person-node__gen-label${genOverride != null ? ' person-node__gen-label--pinned' : ''}`}>
+            Gen {genLevel}
+          </span>
+          <button
+            className="person-node__gen-btn"
+            title="Move down one generation"
+            onMouseDown={e => { e.stopPropagation(); onGenChange?.(+1) }}
+          >+</button>
         </div>
       )}
     </div>

@@ -223,6 +223,15 @@ function FamilyTreeApp() {
     return map.size ? map : null
   }, [selectedForKin, edges])
 
+  // Admin: shift a person's generation by ±1 (stored as 1-based genOverride)
+  const ROW_H = 226 // must match layout.js NODE_H + V_GAP
+  const handleGenChange = useCallback((nodeId, delta) => {
+    const node = nodes.find(n => n.id === nodeId)
+    if (!node) return
+    const current = node.data.genOverride ?? Math.round(node.position.y / ROW_H) + 1
+    updatePerson(nodeId, { genOverride: Math.max(1, current + delta) })
+  }, [nodes, updatePerson])
+
   // ── Nodes with callbacks + highlight state ────────────────────────────────
   const nodesWithCallbacks = useMemo(() => nodes.map((node) => {
     // canDelete: own nodes, admin, or legacy nodes with no createdBy tag
@@ -243,9 +252,13 @@ function FamilyTreeApp() {
         isFocus:    node.id === hoveredNodeId,
         kinRole:    immediateKin ? null : (extendedKin?.get(node.id) ?? null),
         canDelete,
+        isAdmin,
+        genLevel:    node.data.genOverride ?? Math.round(node.position.y / ROW_H) + 1,
+        genOverride: node.data.genOverride ?? null,
+        onGenChange: (delta) => handleGenChange(node.id, delta),
       },
     }
-  }), [nodes, visitorId, isAdmin, openModal, updatePerson, deletePerson, immediateKin, hoveredNodeId, extendedKin])
+  }), [nodes, visitorId, isAdmin, openModal, updatePerson, deletePerson, immediateKin, hoveredNodeId, extendedKin, handleGenChange])
 
   // ── Edges with dimming on hover ────────────────────────────────────────────
   const displayEdges = useMemo(() => {
