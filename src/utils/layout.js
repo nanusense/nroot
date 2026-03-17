@@ -346,12 +346,23 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
       const strays   = comp.filter(id => !isAnchored(id))
       if (!anchored.length || !strays.length) return
 
-      const anchoredNodes = anchored.flatMap(id => [...collectSubtree(id)]).filter(id => pos[id])
-      let rightX = Math.max(...anchoredNodes.map(id => pos[id].x + NODE_W))
-      let leftX  = Math.min(...anchoredNodes.map(id => pos[id].x))
+      // Use only the direct anchor sibling nodes (+ their spouses) — NOT their full
+      // descendant subtrees — to compute leftX/rightX.  Placing strays adjacent to the
+      // specific sibling node gives the overlap-resolver a much shorter shift distance,
+      // keeping disconnected families visually close instead of being pushed far right.
+      const anchorDirectNodes = anchored.flatMap(id => {
+        const sp = spouseOf[id]
+        return (sp && pos[sp]) ? [id, sp] : [id]
+      }).filter(id => pos[id])
+      let rightX = Math.max(...anchorDirectNodes.map(id => pos[id].x + NODE_W))
+      let leftX  = Math.min(...anchorDirectNodes.map(id => pos[id].x))
 
-      const strayGoesLeft = strayId =>
-        sibEdges.some(e => e.source === strayId && anchored.includes(e.target))
+      // Determine left/right by current position, not edge direction.
+      // A stray that is currently to the right of the anchor cluster belongs on the
+      // right — forcing it left would push it through the main cluster and the
+      // overlap-resolver would shove it all the way back out to the right.
+      const anchorCentreX = (leftX + rightX) / 2
+      const strayGoesLeft = strayId => (pos[strayId]?.x ?? 0) < anchorCentreX
 
       const leftStrays  = strays.filter(id =>  strayGoesLeft(id))
         .sort((a, b) => (pos[b]?.x ?? 0) - (pos[a]?.x ?? 0))
