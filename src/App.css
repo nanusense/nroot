@@ -1044,3 +1044,112 @@ body {
 }
 .howto-tag--cousin { background: rgba(139,125,170,0.15); color: #6b5a8a; border: 1px solid #b8a8d8; }
 .howto-tag--nephew { background: rgba(94,141,168,0.15); color: #3a6a88; border: 1px solid #8abcda; }
+
+/* ── Search widget ──────────────────────────────────────────────────────────── */
+
+.toolbar__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.toolbar__search-input {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 13px;
+  height: 34px;
+  padding: 0 10px;
+  outline: none;
+  width: 190px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.toolbar__search-input::placeholder { color: var(--text-mid); }
+.toolbar__search-input:focus {
+  border-color: var(--gold);
+  background: rgba(255,255,255,0.11);
+}
+/* Remove native search clear button */
+.toolbar__search-input::-webkit-search-cancel-button { display: none; }
+
+.toolbar__search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  z-index: 9999;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.toolbar__search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+  gap: 8px;
+}
+.toolbar__search-result:hover {
+  background: rgba(196,168,130,0.15);
+}
+
+.toolbar__search-name {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.toolbar__search-year {
+  font-size: 11.5px;
+  color: var(--text-mid);
+  white-space: nowrap;
+}
+
+.toolbar__search-empty {
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text-mid);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  z-index: 9999;
+}
+
+.toolbar__search--mobile {
+  width: 100%;
+  margin-bottom: 4px;
+}
+.toolbar__search--mobile .toolbar__search-input {
+  width: 100%;
+}
+.toolbar__search--mobile .toolbar__search-results {
+  width: 100%;
+  position: static;
+  margin-top: 4px;
+  box-shadow: none;
+}
+.toolbar__search--mobile .toolbar__search-empty {
+  position: static;
+  width: 100%;
+  margin-top: 4px;
+}

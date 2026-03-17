@@ -1,13 +1,60 @@
-import { useRef, useCallback, useState } from 'react'
+import { useRef, useCallback, useState, useMemo, useEffect } from 'react'
 import { useReactFlow } from '@xyflow/react'
 
-export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExport, onImport, importJSON, isAdmin, onUnlockAdmin, onLockAdmin, onHowTo }) {
+export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExport, onImport, importJSON, isAdmin, onUnlockAdmin, onLockAdmin, onHowTo, onSearchSelect }) {
   const { zoomIn, zoomOut, fitView } = useReactFlow()
   const importRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [pinOpen, setPinOpen] = useState(false)
   const [pinValue, setPinValue] = useState('')
   const [pinError, setPinError] = useState(false)
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchRef = useRef(null)
+  const searchInputRef = useRef(null)
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return []
+    return nodes
+      .filter(n => n.data?.name?.toLowerCase().includes(q))
+      .slice(0, 10)
+      .sort((a, b) => {
+        // Exact match first, then starts-with, then contains
+        const an = a.data.name.toLowerCase()
+        const bn = b.data.name.toLowerCase()
+        if (an === q) return -1
+        if (bn === q) return 1
+        if (an.startsWith(q) && !bn.startsWith(q)) return -1
+        if (bn.startsWith(q) && !an.startsWith(q)) return 1
+        return an.localeCompare(bn)
+      })
+  }, [searchQuery, nodes])
+
+  const handleSearchSelect = useCallback((nodeId) => {
+    onSearchSelect?.(nodeId)
+    setSearchQuery('')
+    setSearchOpen(false)
+  }, [onSearchSelect])
+
+  const handleSearchInput = useCallback((e) => {
+    setSearchQuery(e.target.value)
+    setSearchOpen(true)
+  }, [])
+
+  // Close search dropdown when clicking outside
+  useEffect(() => {
+    if (!searchOpen) return
+    const handler = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSearchOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [searchOpen])
 
   const handleImportChange = useCallback(
     async (e) => {
@@ -48,6 +95,41 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
     setPinOpen(true)
   }
 
+  const SearchBox = (
+    <div className="toolbar__search" ref={searchRef}>
+      <input
+        ref={searchInputRef}
+        className="toolbar__search-input"
+        type="search"
+        placeholder="Search by name…"
+        value={searchQuery}
+        onChange={handleSearchInput}
+        onFocus={() => searchQuery && setSearchOpen(true)}
+        autoComplete="off"
+      />
+      {searchOpen && searchResults.length > 0 && (
+        <ul className="toolbar__search-results">
+          {searchResults.map(n => (
+            <li key={n.id}>
+              <button
+                className="toolbar__search-result"
+                onMouseDown={(e) => { e.preventDefault(); handleSearchSelect(n.id) }}
+              >
+                <span className="toolbar__search-name">{n.data.name}</span>
+                {n.data.yearOfBirth && (
+                  <span className="toolbar__search-year">b. {n.data.yearOfBirth}</span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {searchOpen && searchQuery.trim() && searchResults.length === 0 && (
+        <div className="toolbar__search-empty">No results</div>
+      )}
+    </div>
+  )
+
   return (
     <header className="toolbar">
       <div className="toolbar__brand">
@@ -58,6 +140,8 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
 
       {/* Desktop actions */}
       <div className="toolbar__actions">
+        {SearchBox}
+
         <button className="btn btn--primary" onClick={onAddRoot}>
           + Add Person
         </button>
@@ -140,6 +224,34 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
         <>
           <div className="toolbar__overlay" onClick={closeMenu} />
           <div className="toolbar__mobile-menu">
+            <div className="toolbar__search toolbar__search--mobile" ref={null}>
+              <input
+                className="toolbar__search-input"
+                type="search"
+                placeholder="Search by name…"
+                value={searchQuery}
+                onChange={handleSearchInput}
+                onFocus={() => searchQuery && setSearchOpen(true)}
+                autoComplete="off"
+              />
+              {searchOpen && searchResults.length > 0 && (
+                <ul className="toolbar__search-results">
+                  {searchResults.map(n => (
+                    <li key={n.id}>
+                      <button
+                        className="toolbar__search-result"
+                        onMouseDown={(e) => { e.preventDefault(); handleSearchSelect(n.id); closeMenu() }}
+                      >
+                        <span className="toolbar__search-name">{n.data.name}</span>
+                        {n.data.yearOfBirth && (
+                          <span className="toolbar__search-year">b. {n.data.yearOfBirth}</span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <button className="btn btn--primary" onClick={() => { onAddRoot(); closeMenu() }}>
               + Add Person
             </button>

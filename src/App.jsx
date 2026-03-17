@@ -60,7 +60,7 @@ function FamilyTreeApp() {
     importJSON,
   } = useFamilyTree({ visitorId })
 
-  const { fitView } = useReactFlow()
+  const { fitView, setCenter, getNode } = useReactFlow()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [modalSourceNode, setModalSourceNode] = useState(null)
@@ -241,7 +241,7 @@ function FamilyTreeApp() {
         onHoverEnd: () => setHoveredNodeId(null),
         dimmed:     immediateKin ? !immediateKin.has(node.id) : false,
         isFocus:    node.id === hoveredNodeId,
-        kinRole:    extendedKin?.get(node.id) ?? null,
+        kinRole:    immediateKin ? null : (extendedKin?.get(node.id) ?? null),
         canDelete,
       },
     }
@@ -270,6 +270,19 @@ function FamilyTreeApp() {
   const onPaneClick = useCallback(() => {
     setSelectedForKin(null)
   }, [])
+
+  // Search: pan + zoom to the found node, and select it for kin highlighting
+  const handleSearchSelect = useCallback((nodeId) => {
+    const node = getNode(nodeId)
+    if (node) {
+      setCenter(
+        node.position.x + 90,   // 90 = NODE_W / 2
+        node.position.y + 48,   // 48 = NODE_H / 2
+        { zoom: 1.5, duration: 600 }
+      )
+    }
+    setSelectedForKin(nodeId)
+  }, [getNode, setCenter])
 
   if (loading) {
     return (
@@ -324,6 +337,7 @@ function FamilyTreeApp() {
         onUnlockAdmin={unlockAdmin}
         onLockAdmin={lockAdmin}
         onHowTo={() => setHowToOpen(true)}
+        onSearchSelect={handleSearchSelect}
       />
 
       <AddPersonModal
