@@ -4,11 +4,13 @@ import { exportJSON, importJSON } from '../utils/storage'
 import { loadTree, saveTree, subscribeToTree, supabase } from '../utils/db'
 import { applyDagreLayout } from '../utils/layout'
 
-// Normalise spouse labels so "Wife"/"Husband" display as "Spouse" on the canvas
-function normaliseLabel(label) {
+// Normalise edge labels for consistent canvas display
+function normaliseLabel(label, isSibling = false) {
+  if (isSibling && !label) return 'Sibling'
   if (!label) return label
   const l = label.trim()
   if (l === 'Wife' || l === 'Husband') return 'Spouse'
+  if (l === 'Brother' || l === 'Sister') return 'Sibling'
   return l
 }
 
@@ -89,12 +91,14 @@ export function useFamilyTree({ visitorId } = {}) {
         if (!parents) return false  // child has no known parent → remove orphan sc edge
         return [...parents].some(p => isRealSpouse(edge.source, p))
       })
-      // Normalise "Wife"/"Husband" → "Spouse" on existing edges
-      const normalisedEdges = cleanedEdges.map(edge =>
-        edge.label === 'Wife' || edge.label === 'Husband'
-          ? { ...edge, label: 'Spouse' }
-          : edge
-      )
+      // Normalise labels on existing edges:
+      // "Wife"/"Husband" → "Spouse", "Brother"/"Sister" → "Sibling",
+      // and sibling edges with no label → "Sibling"
+      const normalisedEdges = cleanedEdges.map(edge => {
+        const isSib = edge.data?.isSibling || !!edge.style?.strokeDasharray
+        const newLabel = normaliseLabel(edge.label, isSib)
+        return newLabel !== edge.label ? { ...edge, label: newLabel } : edge
+      })
       const hadChanges = cleanedEdges.length < e.length ||
         normalisedEdges.some((edge, i) => edge.label !== cleanedEdges[i].label)
       setNodes(n)
@@ -264,6 +268,8 @@ export function useFamilyTree({ visitorId } = {}) {
           source: e.target, target: id,
           sourceHandle: 'right-source', targetHandle: 'left-target',
           type: 'straight',
+          label: 'Sibling',
+          ...labelProps,
           style: { stroke: EDGE_COLOR.sibling, strokeWidth: 1.5, strokeDasharray: '6 4' },
           data: { isSibling: true },
         })
