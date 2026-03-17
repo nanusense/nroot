@@ -429,11 +429,13 @@ export function useFamilyTree({ visitorId } = {}) {
 
   const deleteEdge = useCallback((edgeId) => {
     setEdges((eds) => {
-      const updated = eds.filter(e => e.id !== edgeId)
-      scheduleSave(nodes, updated)
-      return updated
+      const updatedEdges = eds.filter(e => e.id !== edgeId)
+      const layoutedNodes = applyDagreLayout(nodes, updatedEdges)
+      setNodes(layoutedNodes)
+      scheduleSave(layoutedNodes, updatedEdges)
+      return updatedEdges
     })
-  }, [nodes, setEdges, scheduleSave])
+  }, [nodes, setNodes, setEdges, scheduleSave])
 
   const autoArrange = useCallback(() => {
     setNodes((nds) => {
