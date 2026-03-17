@@ -104,17 +104,18 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
     bfsQ = nxt
   }
 
-  // Normalise couples, re-propagate; iterate until no more changes.
+  // Normalise couples + rootless siblings, re-propagate; iterate until stable.
   //
-  // Two normalisation rules:
+  // Three normalisation rules:
   //   a) Spouses share the same generation (max of both)
-  //   b) A child's generation must be at least parent's gen + 1
+  //   b) A parentless node inherits the generation of its sibling-edge partner
+  //      ONLY if that partner's gen is higher. Nodes that already have parents
+  //      are never raised via sibling edges — their parents define their gen,
+  //      preventing the "parent 4 levels above child" bug.
+  //   c) A child's generation must be at least parent's gen + 1
   //
-  // Note: sibling-edge pairs are NOT normalised here. True siblings already
-  // land on the same generation via the parent-child BFS. Normalising sibling
-  // edges by taking the max would pull a naturally-gen-1 sibling down to gen 4
-  // if their sibling happens to be deeper, creating a huge visual gap between
-  // parents and children. X-proximity of siblings is handled by step 7.
+  // Rule (b) is what correctly places orphaned subtrees (e.g. a grandparent
+  // who was added with only a sibling edge to a cousin already in the tree).
   let changed = true, guard = 0
   while (changed && guard++ < 500) {
     changed = false
@@ -126,7 +127,21 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
       if ((gen[b] ?? -1) < maxG) { gen[b] = maxG; changed = true }
     })
 
-    // (b) Children must be at least one generation below each parent
+    // (b) Parentless nodes inherit gen from sibling-edge partner
+    sibEdges.forEach(e => {
+      const aHasParents = (parentsOf[e.source]?.length ?? 0) > 0
+      const bHasParents = (parentsOf[e.target]?.length ?? 0) > 0
+      if (!aHasParents) {
+        const want = gen[e.target] ?? 0
+        if ((gen[e.source] ?? -1) < want) { gen[e.source] = want; changed = true }
+      }
+      if (!bHasParents) {
+        const want = gen[e.source] ?? 0
+        if ((gen[e.target] ?? -1) < want) { gen[e.target] = want; changed = true }
+      }
+    })
+
+    // (c) Children must be at least one generation below each parent
     nodes.forEach(n => {
       const g = gen[n.id] ?? 0
       ;(childrenOf[n.id] ?? []).forEach(kid => {
