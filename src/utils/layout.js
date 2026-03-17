@@ -104,7 +104,17 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
     bfsQ = nxt
   }
 
-  // Normalise couples + siblings, re-propagate; iterate until no more changes.
+  // Normalise couples, re-propagate; iterate until no more changes.
+  //
+  // Two normalisation rules:
+  //   a) Spouses share the same generation (max of both)
+  //   b) A child's generation must be at least parent's gen + 1
+  //
+  // Note: sibling-edge pairs are NOT normalised here. True siblings already
+  // land on the same generation via the parent-child BFS. Normalising sibling
+  // edges by taking the max would pull a naturally-gen-1 sibling down to gen 4
+  // if their sibling happens to be deeper, creating a huge visual gap between
+  // parents and children. X-proximity of siblings is handled by step 7.
   let changed = true, guard = 0
   while (changed && guard++ < 500) {
     changed = false
@@ -116,14 +126,7 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
       if ((gen[b] ?? -1) < maxG) { gen[b] = maxG; changed = true }
     })
 
-    // (b) Sibling-edge pairs → same generation
-    sibEdges.forEach(e => {
-      const maxG = Math.max(gen[e.source] ?? 0, gen[e.target] ?? 0)
-      if ((gen[e.source] ?? -1) < maxG) { gen[e.source] = maxG; changed = true }
-      if ((gen[e.target] ?? -1) < maxG) { gen[e.target] = maxG; changed = true }
-    })
-
-    // (c) Children must be at least one generation below each parent
+    // (b) Children must be at least one generation below each parent
     nodes.forEach(n => {
       const g = gen[n.id] ?? 0
       ;(childrenOf[n.id] ?? []).forEach(kid => {
@@ -389,7 +392,29 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
     if (!moved) break
   }
 
-  // ── 10. Return updated nodes ─────────────────────────────────────────────────
+  // ── 10. Re-centre parents displaced by overlap resolution ──────────────────
+  // Step 9 shifts child subtrees right but leaves their parents in place.
+  // This pass slides parents back over their actual children with a tight
+  // threshold so only genuinely displaced parents move.
+
+  for (let g = maxGen - 1; g >= 0; g--) {
+    nodes.forEach(n => {
+      if (gen[n.id] !== g || pos[n.id] == null) return
+      const kids = unitKids(n.id).filter(k => pos[k] != null)
+      if (!kids.length) return
+      const kidsLeft    = Math.min(...kids.map(k => pos[k].x))
+      const kidsRight   = Math.max(...kids.map(k => pos[k].x + NODE_W))
+      const kidsCenterX = (kidsLeft + kidsRight) / 2
+      const selfCenterX = pos[n.id].x + NODE_W / 2
+      if (Math.abs(kidsCenterX - selfCenterX) <= NODE_W * 0.5) return
+      const dx = kidsCenterX - selfCenterX
+      const sp = spouseOf[n.id]
+      pos[n.id] = { x: pos[n.id].x + dx, y: g * ROW_H }
+      if (sp && pos[sp] != null) pos[sp] = { x: pos[sp].x + dx, y: g * ROW_H }
+    })
+  }
+
+  // ── 11. Return updated nodes ─────────────────────────────────────────────────
 
   return nodes.map(n => ({ ...n, position: pos[n.id] ?? n.position }))
 }
