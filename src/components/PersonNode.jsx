@@ -175,11 +175,14 @@ function PersonNode({ id, data, selected }) {
 
       {/* Admin: generation level badge with ±1 controls */}
       {isAdmin && (
-        <div className="person-node__gen">
+        <div className="person-node__gen"
+          onPointerDown={e => e.stopPropagation()}
+          onMouseDown={e => e.stopPropagation()}
+        >
           <button
             className="person-node__gen-btn"
             title="Move up one generation"
-            onMouseDown={e => { e.stopPropagation(); onGenChange?.(-1) }}
+            onClick={e => { e.stopPropagation(); onGenChange?.(-1) }}
           >−</button>
           <span className={`person-node__gen-label${genOverride != null ? ' person-node__gen-label--pinned' : ''}`}>
             Gen {genLevel}
@@ -187,7 +190,7 @@ function PersonNode({ id, data, selected }) {
           <button
             className="person-node__gen-btn"
             title="Move down one generation"
-            onMouseDown={e => { e.stopPropagation(); onGenChange?.(+1) }}
+            onClick={e => { e.stopPropagation(); onGenChange?.(+1) }}
           >+</button>
         </div>
       )}
