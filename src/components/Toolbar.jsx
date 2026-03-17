@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState, useMemo, useEffect } from 'react'
 import { useReactFlow } from '@xyflow/react'
 
-export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExport, onImport, importJSON, isAdmin, onUnlockAdmin, onLockAdmin, onHowTo, onSearchSelect }) {
+export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExport, onImport, importJSON, isAdmin, onUnlockAdmin, onLockAdmin, onHowTo, onSearchSelect, theme, onThemeToggle }) {
   const { zoomIn, zoomOut, fitView } = useReactFlow()
   const importRef = useRef(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -189,6 +189,16 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
 
         <div className="toolbar__divider" />
 
+        <button
+          className="btn btn--icon"
+          onClick={onThemeToggle}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+
+        <div className="toolbar__divider" />
+
         {/* Admin lock/unlock */}
         {isAdmin ? (
           <button
@@ -278,6 +288,10 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
             <div className="toolbar__divider" />
             <button className="btn btn--ghost" onClick={() => { onHowTo(); closeMenu() }}>
               How to
+            </button>
+            <div className="toolbar__divider" />
+            <button className="btn btn--ghost" onClick={() => { onThemeToggle(); closeMenu() }}>
+              {theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode'}
             </button>
             <div className="toolbar__divider" />
             {isAdmin ? (

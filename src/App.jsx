@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useRef } from 'react'
+import { useCallback, useMemo, useState, useRef, useEffect } from 'react'
 import { getVisitorId } from './utils/identity'
 import {
   ReactFlow,
@@ -24,6 +24,14 @@ const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN
 function FamilyTreeApp() {
   // Stable visitor identity (persists in localStorage)
   const visitorId = useRef(getVisitorId()).current
+
+  // Theme toggle — persisted in localStorage
+  const [theme, setTheme] = useState(() => localStorage.getItem('nroot_theme') ?? 'dark')
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('nroot_theme', theme)
+  }, [theme])
+  const toggleTheme = useCallback(() => setTheme(t => t === 'dark' ? 'light' : 'dark'), [])
 
   // Admin unlock state — stored in sessionStorage so it survives page refresh
   // within the same tab but resets when the tab is closed.
@@ -329,11 +337,14 @@ function FamilyTreeApp() {
         }}
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="#1e3322" gap={28} size={1.5} variant="dots" />
+        <Background
+          color={theme === 'dark' ? '#1e3322' : '#d0c8b4'}
+          gap={28} size={1.5} variant="dots"
+        />
         <Controls style={{ bottom: 24, left: 24 }} />
         <MiniMap
           nodeColor={() => '#b8904a'}
-          maskColor="rgba(14,27,16,0.75)"
+          maskColor={theme === 'dark' ? 'rgba(14,27,16,0.75)' : 'rgba(244,240,232,0.75)'}
           style={{ bottom: 24, right: 24 }}
         />
       </ReactFlow>
@@ -351,6 +362,8 @@ function FamilyTreeApp() {
         onLockAdmin={lockAdmin}
         onHowTo={() => setHowToOpen(true)}
         onSearchSelect={handleSearchSelect}
+        theme={theme}
+        onThemeToggle={toggleTheme}
       />
 
       <AddPersonModal
