@@ -337,27 +337,6 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
       sibComponents.push(comp)
     })
 
-    // Pre-compute all stray subtree IDs across ALL sibling components.
-    // This lets us exclude them from the global bounds calculation so that a
-    // stray's initial (pre-compaction) position doesn't inflate rightX — which
-    // would push the overlap-resolver into shifting main-cluster nodes far right.
-    const isAnchoredCheck = id =>
-      !!(parentsOf[id]?.length) ||
-      !!(spouseOf[id] && parentsOf[spouseOf[id]]?.length)
-    const globalStraySubtreeIds = new Set()
-    sibComponents.forEach(comp => {
-      comp.filter(id => !isAnchoredCheck(id)).forEach(strayId => {
-        collectSubtree(strayId).forEach(sid => globalStraySubtreeIds.add(sid))
-      })
-    })
-
-    // Global right/left bounds of the main cluster (non-stray nodes only).
-    const mainPos = Object.entries(pos)
-      .filter(([id]) => !globalStraySubtreeIds.has(id) && pos[id] != null)
-      .map(([, p]) => p)
-    const globalRightX = mainPos.length ? Math.max(...mainPos.map(p => p.x + NODE_W)) : 0
-    const globalLeftX  = mainPos.length ? Math.min(...mainPos.map(p => p.x))          : 0
-
     sibComponents.forEach(comp => {
       const isAnchored = id =>
         !!(parentsOf[id]?.length) ||
@@ -367,26 +346,22 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
       const strays   = comp.filter(id => !isAnchored(id))
       if (!anchored.length || !strays.length) return
 
-      // Use only the direct anchor sibling nodes (+ their spouses) to seed
-      // leftX/rightX, then expand to the MAIN-CLUSTER global bounds (excluding
-      // stray initial positions).  This ensures strays are placed OUTSIDE the
-      // whole main cluster, not inserted into the middle of it, while avoiding
-      // the cascade of rightward shifts in the overlap-resolver.
+      // Use only the direct anchor sibling nodes (+ their spouses) — NOT their full
+      // descendant subtrees — to compute leftX/rightX.  Placing strays adjacent to the
+      // specific sibling node gives the overlap-resolver a much shorter shift distance,
+      // keeping disconnected families visually close instead of being pushed far right.
       const anchorDirectNodes = anchored.flatMap(id => {
         const sp = spouseOf[id]
         return (sp && pos[sp]) ? [id, sp] : [id]
       }).filter(id => pos[id])
-      let rightX = Math.max(
-        Math.max(...anchorDirectNodes.map(id => pos[id].x + NODE_W)),
-        globalRightX
-      )
-      let leftX = Math.min(
-        Math.min(...anchorDirectNodes.map(id => pos[id].x)),
-        globalLeftX
-      )
+      let rightX = Math.max(...anchorDirectNodes.map(id => pos[id].x + NODE_W))
+      let leftX  = Math.min(...anchorDirectNodes.map(id => pos[id].x))
 
-      // Determine left/right by current position relative to the main-cluster centre.
-      const anchorCentreX = (globalLeftX + globalRightX) / 2
+      // Determine left/right by current position, not edge direction.
+      // A stray that is currently to the right of the anchor cluster belongs on the
+      // right — forcing it left would push it through the main cluster and the
+      // overlap-resolver would shove it all the way back out to the right.
+      const anchorCentreX = (leftX + rightX) / 2
       const strayGoesLeft = strayId => (pos[strayId]?.x ?? 0) < anchorCentreX
 
       const leftStrays  = strays.filter(id =>  strayGoesLeft(id))
