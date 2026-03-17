@@ -366,10 +366,10 @@ export function useFamilyTree({ visitorId } = {}) {
     debouncedSave(layoutedNodes, updatedEdges)
   }, [nodes, edges, setNodes, setEdges, debouncedSave])
 
-  const updatePerson = useCallback((nodeId, { name, yearOfBirth }) => {
+  const updatePerson = useCallback((nodeId, updates) => {
     setNodes((nds) => {
       const updated = nds.map((n) =>
-        n.id === nodeId ? { ...n, data: { ...n.data, name, yearOfBirth } } : n
+        n.id === nodeId ? { ...n, data: { ...n.data, ...updates } } : n
       )
       debouncedSave(updated, edges)
       return updated
