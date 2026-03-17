@@ -271,15 +271,17 @@ function FamilyTreeApp() {
   // ── Edges with dimming on hover ────────────────────────────────────────────
   const displayEdges = useMemo(() => {
     if (!immediateKin) return edges
-    return edges.map(e => ({
-      ...e,
-      style: {
-        ...e.style,
-        opacity: (immediateKin.has(e.source) && immediateKin.has(e.target))
-          ? (e.style?.opacity ?? 1)
-          : 0.07,
-      },
-    }))
+    return edges.map(e => {
+      const isKinEdge = immediateKin.has(e.source) && immediateKin.has(e.target)
+      return {
+        ...e,
+        label: isKinEdge ? e.label : '',
+        style: {
+          ...e.style,
+          opacity: isKinEdge ? (e.style?.opacity ?? 1) : 0.07,
+        },
+      }
+    })
   }, [edges, immediateKin])
 
   // Click a node → toggle cousin/nephew view for that node
