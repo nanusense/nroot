@@ -344,48 +344,49 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
 
       const anchored = comp.filter(isAnchored)
       const strays   = comp.filter(id => !isAnchored(id))
-      if (!anchored.length || !strays.length) return
+      if (!anchored.length) return
 
-      // Use only the direct anchor sibling nodes (+ their spouses) — NOT their full
-      // descendant subtrees — to compute leftX/rightX.  Placing strays adjacent to the
-      // specific sibling node gives the overlap-resolver a much shorter shift distance,
-      // keeping disconnected families visually close instead of being pushed far right.
-      const anchorDirectNodes = anchored.flatMap(id => {
-        const sp = spouseOf[id]
-        return (sp && pos[sp]) ? [id, sp] : [id]
-      }).filter(id => pos[id])
-      let rightX = Math.max(...anchorDirectNodes.map(id => pos[id].x + NODE_W))
-      let leftX  = Math.min(...anchorDirectNodes.map(id => pos[id].x))
+      // ── Case A: stray siblings → pull toward anchored group ─────────────────
+      if (strays.length) {
+        // Use only the direct anchor sibling nodes (+ their spouses) — NOT their full
+        // descendant subtrees — to compute leftX/rightX.  Placing strays adjacent to the
+        // specific sibling node gives the overlap-resolver a much shorter shift distance,
+        // keeping disconnected families visually close instead of being pushed far right.
+        const anchorDirectNodes = anchored.flatMap(id => {
+          const sp = spouseOf[id]
+          return (sp && pos[sp]) ? [id, sp] : [id]
+        }).filter(id => pos[id])
+        let rightX = Math.max(...anchorDirectNodes.map(id => pos[id].x + NODE_W))
+        let leftX  = Math.min(...anchorDirectNodes.map(id => pos[id].x))
 
-      // Determine left/right by current position, not edge direction.
-      // A stray that is currently to the right of the anchor cluster belongs on the
-      // right — forcing it left would push it through the main cluster and the
-      // overlap-resolver would shove it all the way back out to the right.
-      const anchorCentreX = (leftX + rightX) / 2
-      const strayGoesLeft = strayId => (pos[strayId]?.x ?? 0) < anchorCentreX
+        // Determine left/right by current position, not edge direction.
+        const anchorCentreX = (leftX + rightX) / 2
+        const strayGoesLeft = strayId => (pos[strayId]?.x ?? 0) < anchorCentreX
 
-      const leftStrays  = strays.filter(id =>  strayGoesLeft(id))
-        .sort((a, b) => (pos[b]?.x ?? 0) - (pos[a]?.x ?? 0))
-      const rightStrays = strays.filter(id => !strayGoesLeft(id))
-        .sort((a, b) => (pos[a]?.x ?? 0) - (pos[b]?.x ?? 0))
+        const leftStrays  = strays.filter(id =>  strayGoesLeft(id))
+          .sort((a, b) => (pos[b]?.x ?? 0) - (pos[a]?.x ?? 0))
+        const rightStrays = strays.filter(id => !strayGoesLeft(id))
+          .sort((a, b) => (pos[a]?.x ?? 0) - (pos[b]?.x ?? 0))
 
-      leftStrays.forEach(strayId => {
-        const strayNodes = [...collectSubtree(strayId)].filter(id => pos[id])
-        if (!strayNodes.length) return
-        const strayRight = Math.max(...strayNodes.map(id => pos[id].x + NODE_W))
-        const dx = leftX - H_GAP - strayRight
-        strayNodes.forEach(id => { pos[id] = { x: pos[id].x + dx, y: pos[id].y } })
-        leftX = Math.min(...strayNodes.map(id => pos[id].x))
-      })
+        leftStrays.forEach(strayId => {
+          const strayNodes = [...collectSubtree(strayId)].filter(id => pos[id])
+          if (!strayNodes.length) return
+          const strayRight = Math.max(...strayNodes.map(id => pos[id].x + NODE_W))
+          const dx = leftX - H_GAP - strayRight
+          strayNodes.forEach(id => { pos[id] = { x: pos[id].x + dx, y: pos[id].y } })
+          leftX = Math.min(...strayNodes.map(id => pos[id].x))
+        })
 
-      rightStrays.forEach(strayId => {
-        const strayNodes = [...collectSubtree(strayId)].filter(id => pos[id])
-        if (!strayNodes.length) return
-        const strayLeft = Math.min(...strayNodes.map(id => pos[id].x))
-        const dx = rightX + H_GAP - strayLeft
-        strayNodes.forEach(id => { pos[id] = { x: pos[id].x + dx, y: pos[id].y } })
-        rightX = Math.max(...strayNodes.map(id => pos[id].x + NODE_W))
-      })
+        rightStrays.forEach(strayId => {
+          const strayNodes = [...collectSubtree(strayId)].filter(id => pos[id])
+          if (!strayNodes.length) return
+          const strayLeft = Math.min(...strayNodes.map(id => pos[id].x))
+          const dx = rightX + H_GAP - strayLeft
+          strayNodes.forEach(id => { pos[id] = { x: pos[id].x + dx, y: pos[id].y } })
+          rightX = Math.max(...strayNodes.map(id => pos[id].x + NODE_W))
+        })
+      }
+
     })
   }
 
@@ -459,15 +460,139 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
     if (!moved) break
   }
 
-  // ── 11. Snap small isolated clusters toward their nearest row neighbour ────────
-  // A couple or tiny family unit can end up in the middle of a large empty span
-  // when their structural parents are far from the sibling cluster they belong
-  // to.  When BOTH gaps (left and right) in the same generation row exceed
-  // ISLAND_GAP, slide the small group toward whichever neighbour is closer.
-  // Only clusters of ≤ 4 nodes are snapped — large subtrees stay where they
-  // were placed by the structural algorithm.
+  // ── 10b. Doubly-anchored sibling bridge ────────────────────────────────────────
+  // When a sibling edge connects two nodes both of which are anchored (have
+  // parents or in-laws in the tree), the stray-compaction in step 7 does nothing
+  // because there are no strays to move.  Yet their root families may still be
+  // placed far apart — the entire right-side cluster needs to be slid left.
+  //
+  // This runs AFTER step 10 so positions reflect fully-resolved, final layout.
+  // Each generation row is shifted independently so the main cluster's right edge
+  // in THAT row is used as the anchor — preventing the y=452 overlap cascade that
+  // occurs when a single global anchor is used.
+  //
+  // After the row-wise shifts, step 10 is re-run to settle any new collisions.
 
-  const ISLAND_GAP = NODE_W * 3.5  // ~630 px — clearly visible empty space
+  if (sibEdges.length) {
+    const isAnchored = id =>
+      !!(parentsOf[id]?.length) ||
+      !!(spouseOf[id] && parentsOf[spouseOf[id]]?.length)
+
+    // Collect every sibling component whose members are ALL anchored
+    const sibAdj10b = {}
+    sibEdges.forEach(e => {
+      ;(sibAdj10b[e.source] ??= []).push(e.target)
+      ;(sibAdj10b[e.target] ??= []).push(e.source)
+    })
+    const visited10b = new Set()
+    const doublyAnchoredSets = []
+
+    Object.keys(sibAdj10b).forEach(id => {
+      if (visited10b.has(id)) return
+      const comp = [], q = [id]
+      while (q.length) {
+        const cur = q.shift()
+        if (visited10b.has(cur)) continue
+        visited10b.add(cur); comp.push(cur)
+        sibAdj10b[cur].forEach(nb => { if (!visited10b.has(nb)) q.push(nb) })
+      }
+      if (comp.every(isAnchored)) doublyAnchoredSets.push(comp)
+    })
+
+    doublyAnchoredSets.forEach(comp => {
+      const withPos = comp.filter(id => pos[id])
+      if (withPos.length < 2) return
+
+      // Find the split point from the largest gap across ALL nodes in ALL rows —
+      // not just the anchor positions.  After overlap-resolution the main cluster
+      // and satellite are each tightly packed; the gap between them is many times
+      // larger than any internal gap, so the global-max-gap reliably finds the
+      // split without accidentally cutting into the main cluster.
+      let bigGapSize = 0, splitX = null
+      const allByRow = new Map()
+      nodes.forEach(n => {
+        if (!pos[n.id]) return
+        const y = pos[n.id].y
+        ;(allByRow.get(y) ?? allByRow.set(y, []).get(y)).push(n)
+      })
+      allByRow.forEach(rowNodes => {
+        const srt = rowNodes.slice().sort((a, b) => pos[a.id].x - pos[b.id].x)
+        for (let k = 1; k < srt.length; k++) {
+          const g = pos[srt[k].id].x - (pos[srt[k - 1].id].x + NODE_W)
+          if (g > bigGapSize) {
+            bigGapSize = g
+            splitX = pos[srt[k - 1].id].x + NODE_W + g / 2
+          }
+        }
+      })
+      if (bigGapSize <= NODE_W * 3.5 || splitX == null) return  // no significant gap
+
+      const satellite = nodes.filter(n => pos[n.id] && pos[n.id].x >= splitX)
+      if (!satellite.length) return
+
+      // Group satellite nodes by Y row
+      const satByRow = new Map()
+      satellite.forEach(n => {
+        const y = pos[n.id].y
+        ;(satByRow.get(y) ?? satByRow.set(y, []).get(y)).push(n)
+      })
+
+      // Shift each row so its leftmost satellite node sits H_GAP right of
+      // the main cluster's rightmost node IN THAT SAME ROW.
+      satByRow.forEach((satNodes, rowY) => {
+        const mainInRow = nodes.filter(n =>
+          pos[n.id] && pos[n.id].x < splitX && pos[n.id].y === rowY
+        )
+        if (!mainInRow.length) return
+
+        const mainRowRight = Math.max(...mainInRow.map(n => pos[n.id].x + NODE_W))
+        const satRowLeft   = Math.min(...satNodes.map(n => pos[n.id].x))
+        const dx = mainRowRight + H_GAP - satRowLeft
+
+        satNodes.forEach(n => { pos[n.id] = { x: pos[n.id].x + dx, y: pos[n.id].y } })
+      })
+    })
+
+    // Re-resolve overlaps introduced by the per-row shifts
+    for (let pass = 0; pass < 20; pass++) {
+      const rowMap10b = new Map()
+      for (const [id, p] of Object.entries(pos)) {
+        ;(rowMap10b.get(p.y) ?? rowMap10b.set(p.y, []).get(p.y)).push(id)
+      }
+      let moved10b = false
+      for (const ids of rowMap10b.values()) {
+        ids.sort((a, b) => pos[a].x - pos[b].x)
+        for (let i = 1; i < ids.length; i++) {
+          const left  = ids[i - 1]
+          const right = ids[i]
+          const gap   = pos[right].x - (pos[left].x + NODE_W)
+          const minGap = (spouseOf[left] === right || spouseOf[right] === left)
+            ? COUPLE_GAP : H_GAP
+          if (gap >= minGap) continue
+          const shift = minGap - gap
+          ;[...collectSubtree(right)].forEach(sid => {
+            if (pos[sid]) pos[sid] = { x: pos[sid].x + shift, y: pos[sid].y }
+          })
+          moved10b = true
+          ids.sort((a, b) => pos[a].x - pos[b].x)
+        }
+      }
+      if (!moved10b) break
+    }
+  }
+
+  // ── 11. Snap isolated clusters toward their nearest row neighbour ─────────────
+  // A family subtree can end up separated by a large empty span when its
+  // structural root was placed far from its sibling group.  When BOTH gaps
+  // (left and right) in the same generation row exceed ISLAND_GAP, slide the
+  // entire subtree toward whichever neighbour is closer.
+  //
+  // Gap and placement use the full cross-row subtree bounds so that the
+  // leftmost node at any level aligns with H_GAP from the neighbour.
+  // A post-snap overlap pass (step 11b) resolves any new collisions.
+
+  const ISLAND_GAP     = NODE_W * 3.5  // ~630 px — clearly visible empty space
+  const MAX_SNAP_NODES = 4             // small isolated couples / nuclear families only
 
   for (let g = 0; g <= maxGen; g++) {
     const rowIds = nodes
@@ -484,21 +609,21 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
       if (sp && pos[sp] && pos[sp].x < pos[id].x) continue
 
       const sub = [...collectSubtree(id)].filter(s => pos[s])
-      if (sub.length > 4) continue  // leave large subtrees untouched
+      if (sub.length > MAX_SNAP_NODES) continue
+      const subSet = new Set(sub)
 
       const subLeft  = Math.min(...sub.map(s => pos[s].x))
       const subRight = Math.max(...sub.map(s => pos[s].x + NODE_W))
-      const subSet   = new Set(sub)
 
       // Skip any row-neighbours that are themselves part of this subtree
       // (e.g. a spouse placed immediately to the right in the same row).
       let li = i - 1; while (li >= 0 && subSet.has(rowIds[li])) li--
       let ri = i + 1; while (ri < rowIds.length && subSet.has(rowIds[ri])) ri++
-      const leftNeighbour  = li >= 0             ? rowIds[li] : null
-      const rightNeighbour = ri < rowIds.length  ? rowIds[ri] : null
+      const leftNeighbour  = li >= 0            ? rowIds[li] : null
+      const rightNeighbour = ri < rowIds.length ? rowIds[ri] : null
 
-      const gapLeft  = leftNeighbour  ? subLeft  - (pos[leftNeighbour].x  + NODE_W) : Infinity
-      const gapRight = rightNeighbour ? pos[rightNeighbour].x - subRight             : Infinity
+      const gapLeft  = leftNeighbour  ? subLeft  - (pos[leftNeighbour].x + NODE_W) : Infinity
+      const gapRight = rightNeighbour ? pos[rightNeighbour].x - subRight            : Infinity
 
       // Only snap if truly isolated on both sides
       if (gapLeft <= ISLAND_GAP || gapRight <= ISLAND_GAP) continue
@@ -515,6 +640,36 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
       sub.forEach(s => { pos[s] = { x: pos[s].x + dx, y: pos[s].y } })
       rowIds.sort((a, b) => pos[a].x - pos[b].x)
     }
+  }
+
+  // ── 11b. Re-resolve overlaps after island snaps ──────────────────────────────
+  // Snapping clusters leftward can push them into existing nodes.  Run the same
+  // overlap-resolution loop as step 10 to settle any new collisions.
+
+  for (let pass = 0; pass < 20; pass++) {
+    const rowMap2 = new Map()
+    for (const [id, p] of Object.entries(pos)) {
+      ;(rowMap2.get(p.y) ?? rowMap2.set(p.y, []).get(p.y)).push(id)
+    }
+    let moved2 = false
+    for (const ids of rowMap2.values()) {
+      ids.sort((a, b) => pos[a].x - pos[b].x)
+      for (let i = 1; i < ids.length; i++) {
+        const left  = ids[i - 1]
+        const right = ids[i]
+        const gap   = pos[right].x - (pos[left].x + NODE_W)
+        const minGap = (spouseOf[left] === right || spouseOf[right] === left)
+          ? COUPLE_GAP : H_GAP
+        if (gap >= minGap) continue
+        const shift = minGap - gap
+        ;[...collectSubtree(right)].forEach(sid => {
+          if (pos[sid]) pos[sid] = { x: pos[sid].x + shift, y: pos[sid].y }
+        })
+        moved2 = true
+        ids.sort((a, b) => pos[a].x - pos[b].x)
+      }
+    }
+    if (!moved2) break
   }
 
   // ── 12. Return updated nodes ─────────────────────────────────────────────────
