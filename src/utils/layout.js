@@ -424,10 +424,12 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
   }
 
   // ── 10. Eliminate per-row overlaps ──────────────────────────────────────────
-  // 10 passes so cascading shifts in large trees fully settle.
-  // Runs after re-centering so any overlaps it introduces are cleaned up here.
+  // 20 passes so cascading shifts in large trees fully settle.
+  // Spouse pairs require only COUPLE_GAP between them; all other adjacent
+  // nodes require H_GAP.  Using H_GAP for couples was the bug that caused
+  // a 20 px cascade error through every couple, producing real overlaps.
 
-  for (let pass = 0; pass < 10; pass++) {
+  for (let pass = 0; pass < 20; pass++) {
     const rowMap = new Map()
     for (const [id, p] of Object.entries(pos)) {
       ;(rowMap.get(p.y) ?? rowMap.set(p.y, []).get(p.y)).push(id)
@@ -440,9 +442,13 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
         const left  = ids[i - 1]
         const right = ids[i]
         const gap   = pos[right].x - (pos[left].x + NODE_W)
-        if (gap >= H_GAP) continue
+        // Spouse pairs are correctly placed at COUPLE_GAP apart; don't push them further.
+        const minGap = (spouseOf[left] === right || spouseOf[right] === left)
+          ? COUPLE_GAP
+          : H_GAP
+        if (gap >= minGap) continue
 
-        const shift = H_GAP - gap
+        const shift = minGap - gap
         ;[...collectSubtree(right)].forEach(sid => {
           if (pos[sid]) pos[sid] = { x: pos[sid].x + shift, y: pos[sid].y }
         })
