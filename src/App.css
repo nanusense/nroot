@@ -58,6 +58,55 @@
   --shadow-hover: 0 8px 36px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10);
 }
 
+/* ── Light theme: toolbar buttons & mobile menu ─────────────────── */
+[data-theme="light"] .btn--ghost {
+  background: rgba(90,72,48,0.07);
+  color: #3a2810;
+  border-color: rgba(90,72,48,0.2);
+}
+[data-theme="light"] .btn--ghost:hover:not(:disabled) {
+  background: rgba(90,72,48,0.14);
+  color: #1c1208;
+}
+
+[data-theme="light"] .btn--icon {
+  background: rgba(90,72,48,0.07);
+  color: #3a2810;
+  border-color: rgba(90,72,48,0.2);
+}
+[data-theme="light"] .btn--icon:hover {
+  background: rgba(90,72,48,0.14);
+  color: #1c1208;
+}
+
+[data-theme="light"] .btn--secondary {
+  background: rgba(184,144,74,0.12);
+  color: #7a5010;
+  border-color: rgba(184,144,74,0.35);
+}
+[data-theme="light"] .btn--secondary:hover:not(:disabled) {
+  background: rgba(184,144,74,0.22);
+  color: #5a3a08;
+}
+
+[data-theme="light"] .toolbar__mobile-menu {
+  background: rgba(248, 241, 228, 0.98);
+  border-bottom-color: rgba(90,72,48,0.15);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+[data-theme="light"] .toolbar__divider {
+  background: rgba(90,72,48,0.15);
+}
+
+[data-theme="light"] .toolbar__hamburger {
+  background: rgba(90,72,48,0.08);
+  border-color: rgba(90,72,48,0.2);
+}
+[data-theme="light"] .toolbar__hamburger span {
+  background: #7a5010;
+}
+
 /* Smooth theme transitions */
 body,
 .toolbar,
