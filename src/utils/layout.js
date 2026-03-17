@@ -627,9 +627,11 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
 
       // Only snap if truly isolated on both sides
       if (gapLeft <= ISLAND_GAP || gapRight <= ISLAND_GAP) continue
+      // Need at least one neighbour to snap toward
+      if (!leftNeighbour && !rightNeighbour) continue
 
       let dx
-      if (gapLeft <= gapRight) {
+      if (leftNeighbour && (!rightNeighbour || gapLeft <= gapRight)) {
         // Left neighbour is closer — snap this cluster to its right
         dx = (pos[leftNeighbour].x + NODE_W + H_GAP) - subLeft
       } else {
