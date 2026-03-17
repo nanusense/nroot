@@ -4,6 +4,14 @@ import { exportJSON, importJSON } from '../utils/storage'
 import { loadTree, saveTree, subscribeToTree, supabase } from '../utils/db'
 import { applyDagreLayout } from '../utils/layout'
 
+// Normalise spouse labels so "Wife"/"Husband" display as "Spouse" on the canvas
+function normaliseLabel(label) {
+  if (!label) return label
+  const l = label.trim()
+  if (l === 'Wife' || l === 'Husband') return 'Spouse'
+  return l
+}
+
 function generateId() {
   return `p_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
 }
@@ -81,11 +89,18 @@ export function useFamilyTree({ visitorId } = {}) {
         if (!parents) return false  // child has no known parent → remove orphan sc edge
         return [...parents].some(p => isRealSpouse(edge.source, p))
       })
-      const hadBadEdges = cleanedEdges.length < e.length
+      // Normalise "Wife"/"Husband" → "Spouse" on existing edges
+      const normalisedEdges = cleanedEdges.map(edge =>
+        edge.label === 'Wife' || edge.label === 'Husband'
+          ? { ...edge, label: 'Spouse' }
+          : edge
+      )
+      const hadChanges = cleanedEdges.length < e.length ||
+        normalisedEdges.some((edge, i) => edge.label !== cleanedEdges[i].label)
       setNodes(n)
-      setEdges(cleanedEdges)
+      setEdges(normalisedEdges)
       setLoading(false)
-      if (hadBadEdges) saveTree(n, cleanedEdges)
+      if (hadChanges) saveTree(n, normalisedEdges)
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -155,7 +170,7 @@ export function useFamilyTree({ visitorId } = {}) {
         target: edgeTgt,
         sourceHandle,
         targetHandle,
-        label: relation || '',
+        label: normaliseLabel(relation) || '',
         type: 'smoothstep',
         ...labelProps,
         data: direction === 'left' ? { isSibling: true } : undefined,
@@ -225,7 +240,7 @@ export function useFamilyTree({ visitorId } = {}) {
           sourceHandle: 'right-source',
           targetHandle: 'left-target',
           type: 'straight',
-          label: relation || '',
+          label: normaliseLabel(relation) || '',
           ...labelProps,
           style: { stroke: EDGE_COLOR.sibling, strokeWidth: 1.5, strokeDasharray: '6 4' },
           data: { isSibling: true },
