@@ -79,9 +79,6 @@ function FamilyTreeApp() {
   // Hover state — drives immediate-kin dimming
   const [hoveredNodeId, setHoveredNodeId] = useState(null)
 
-  // Selection state — drives cousin/nephew rings
-  const [selectedForKin, setSelectedForKin] = useState(null)
-
   const openModal = useCallback((sourceNode = null, direction = '') => {
     setModalSourceNode(sourceNode)
     setModalDirection(direction)
@@ -166,71 +163,6 @@ function FamilyTreeApp() {
     return set
   }, [hoveredNodeId, edges])
 
-  // ── Extended kin (selection) ───────────────────────────────────────────────
-  // Computes cousins and nephews/nieces relative to the selected node.
-  // Returns Map<nodeId, 'cousin' | 'nephew'> or null.
-  const extendedKin = useMemo(() => {
-    if (!selectedForKin) return null
-
-    const parentOf   = new Map()  // childId → Set<parentId>
-    const childrenOf = new Map()  // parentId → Set<childId>
-    const siblingsOf = new Map()  // id → Set<siblingId>
-
-    edges.forEach(e => {
-      const isSpouseEdge = isSpouseEdgeGlobal(e)
-      if (isSibEdge(e)) {
-        if (!siblingsOf.has(e.source)) siblingsOf.set(e.source, new Set())
-        if (!siblingsOf.has(e.target)) siblingsOf.set(e.target, new Set())
-        siblingsOf.get(e.source).add(e.target)
-        siblingsOf.get(e.target).add(e.source)
-      } else if (!e.data?.isSpouseChild && !isSpouseEdge) {
-        // parent-child edge only (bottom-source → top-target)
-        if (!childrenOf.has(e.source)) childrenOf.set(e.source, new Set())
-        childrenOf.get(e.source).add(e.target)
-        if (!parentOf.has(e.target)) parentOf.set(e.target, new Set())
-        parentOf.get(e.target).add(e.source)
-      }
-    })
-
-    // Transitive sibling closure via BFS — A→B→C means C is also A's sibling
-    function getAllSiblings(id) {
-      const visited = new Set()
-      const queue = [id]
-      while (queue.length) {
-        const cur = queue.shift()
-        if (visited.has(cur)) continue
-        visited.add(cur)
-        ;(siblingsOf.get(cur) ?? new Set()).forEach(s => { if (!visited.has(s)) queue.push(s) })
-      }
-      visited.delete(id)
-      return visited
-    }
-
-    const map = new Map()
-    const ownParents  = parentOf.get(selectedForKin) ?? new Set()
-    const ownSiblings = getAllSiblings(selectedForKin)
-
-    // Nephews/nieces: children of own siblings (transitively)
-    ownSiblings.forEach(sibId => {
-      ;(childrenOf.get(sibId) ?? new Set()).forEach(nid => {
-        if (nid !== selectedForKin && !map.has(nid)) map.set(nid, 'nephew')
-      })
-    })
-
-    // Cousins: parents' siblings' (transitively) children
-    ownParents.forEach(parentId => {
-      getAllSiblings(parentId).forEach(psibId => {
-        ;(childrenOf.get(psibId) ?? new Set()).forEach(cid => {
-          if (cid !== selectedForKin && !ownSiblings.has(cid) && !map.has(cid)) {
-            map.set(cid, 'cousin')
-          }
-        })
-      })
-    })
-
-    return map.size ? map : null
-  }, [selectedForKin, edges])
-
   // Admin: shift a person's generation by ±1 (stored as 1-based genOverride)
   const ROW_H = 226 // must match layout.js NODE_H + V_GAP
   const handleGenChange = useCallback((nodeId, delta) => {
@@ -258,7 +190,7 @@ function FamilyTreeApp() {
         onHoverEnd: () => setHoveredNodeId(null),
         dimmed:     immediateKin ? !immediateKin.has(node.id) : false,
         isFocus:    node.id === hoveredNodeId,
-        kinRole:    immediateKin ? null : (extendedKin?.get(node.id) ?? null),
+        kinRole:    null,
         canDelete,
         isAdmin,
         genLevel:    node.data.genOverride ?? Math.round(node.position.y / ROW_H) + 1,
@@ -266,7 +198,7 @@ function FamilyTreeApp() {
         onGenChange: (delta) => handleGenChange(node.id, delta),
       },
     }
-  }), [nodes, visitorId, isAdmin, openModal, updatePerson, deletePerson, immediateKin, hoveredNodeId, extendedKin, handleGenChange])
+  }), [nodes, visitorId, isAdmin, openModal, updatePerson, deletePerson, immediateKin, hoveredNodeId, handleGenChange])
 
   // ── Edges with dimming on hover ────────────────────────────────────────────
   const displayEdges = useMemo(() => {
@@ -284,17 +216,7 @@ function FamilyTreeApp() {
     })
   }, [edges, immediateKin])
 
-  // Click a node → toggle cousin/nephew view for that node
-  const onNodeClick = useCallback((_, node) => {
-    setSelectedForKin(prev => prev === node.id ? null : node.id)
-  }, [])
-
-  // Click canvas → clear selection
-  const onPaneClick = useCallback(() => {
-    setSelectedForKin(null)
-  }, [])
-
-  // Search: pan + zoom to the found node, and select it for kin highlighting
+  // Search: pan + zoom to the found node
   const handleSearchSelect = useCallback((nodeId) => {
     const node = getNode(nodeId)
     if (node) {
@@ -304,7 +226,6 @@ function FamilyTreeApp() {
         { zoom: 1.5, duration: 600 }
       )
     }
-    setSelectedForKin(nodeId)
   }, [getNode, setCenter])
 
   if (loading) {
@@ -326,8 +247,6 @@ function FamilyTreeApp() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onNodeClick={onNodeClick}
-        onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.3 }}

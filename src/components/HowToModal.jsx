@@ -78,8 +78,7 @@ export default function HowToModal({ onClose }) {
             <h3 className="howto-section__title">Hover highlights</h3>
             <p>
               Hovering over a person dims everyone else and lights up only their
-              immediate family: parents, spouse, children, and siblings. Clicking a
-              person also shows extended family: <span className="howto-tag howto-tag--cousin">cousins</span> get a purple ring and <span className="howto-tag howto-tag--nephew">nephews / nieces</span> get a blue ring.
+              immediate family: parents, spouse, children, and siblings.
             </p>
           </section>
 
