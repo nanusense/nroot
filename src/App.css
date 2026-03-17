@@ -226,7 +226,7 @@ body {
   }
 
   .toolbar__count {
-    display: none;
+    font-size: 10px;
   }
 
   /* Hide desktop actions, show hamburger */
