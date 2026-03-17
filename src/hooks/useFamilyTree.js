@@ -36,18 +36,26 @@ export function useFamilyTree({ visitorId } = {}) {
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [loading, setLoading] = useState(true)
 
-  // Tracks whether we recently saved so we can ignore our own real-time echo
+  // Tracks whether we have local changes in-flight (debounce window + save + echo window).
+  // Set to true immediately on any local change so realtime doesn't overwrite pending edits.
   const isSavingRef = useRef(false)
 
   // Debounced save — avoids hammering Supabase on every drag/position update
   const debouncedSave = useRef(
     debounce((n, e) => {
-      isSavingRef.current = true
+      // isSavingRef is already true (set when the change was made)
       saveTree(n, e).finally(() => {
         setTimeout(() => { isSavingRef.current = false }, 1500)
       })
     }, 800)
   ).current
+
+  // Call this instead of debouncedSave directly so isSavingRef is set immediately,
+  // protecting local state during the 800 ms debounce window.
+  const scheduleSave = useCallback((n, e) => {
+    isSavingRef.current = true
+    debouncedSave(n, e)
+  }, [debouncedSave])
 
   // Initial load from Supabase
   useEffect(() => {
@@ -269,10 +277,10 @@ export function useFamilyTree({ visitorId } = {}) {
     const layoutedNodes = applyDagreLayout(updatedNodes, updatedEdges, 'TB', id)
     setNodes(layoutedNodes)
     setEdges(updatedEdges)
-    debouncedSave(layoutedNodes, updatedEdges)
+    scheduleSave(layoutedNodes, updatedEdges)
 
     return id
-  }, [nodes, edges, setNodes, setEdges, debouncedSave])
+  }, [nodes, edges, setNodes, setEdges, scheduleSave])
 
   // Connect two EXISTING nodes with a relationship edge.
   // Uses the same flip-to-left logic as addPerson so spouses never collide with siblings.
@@ -363,38 +371,38 @@ export function useFamilyTree({ visitorId } = {}) {
     const layoutedNodes = applyDagreLayout(nodes, updatedEdges, 'TB', null)
     setNodes(layoutedNodes)
     setEdges(updatedEdges)
-    debouncedSave(layoutedNodes, updatedEdges)
-  }, [nodes, edges, setNodes, setEdges, debouncedSave])
+    scheduleSave(layoutedNodes, updatedEdges)
+  }, [nodes, edges, setNodes, setEdges, scheduleSave])
 
   const updatePerson = useCallback((nodeId, updates) => {
     setNodes((nds) => {
       const updated = nds.map((n) =>
         n.id === nodeId ? { ...n, data: { ...n.data, ...updates } } : n
       )
-      debouncedSave(updated, edges)
+      scheduleSave(updated, edges)
       return updated
     })
-  }, [setNodes, edges, debouncedSave])
+  }, [setNodes, edges, scheduleSave])
 
   const deletePerson = useCallback((nodeId) => {
     setNodes((nds) => {
       const updated = nds.filter((n) => n.id !== nodeId)
       setEdges((eds) => {
         const updatedEdges = eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
-        debouncedSave(updated, updatedEdges)
+        scheduleSave(updated, updatedEdges)
         return updatedEdges
       })
       return updated
     })
-  }, [setNodes, setEdges, debouncedSave])
+  }, [setNodes, setEdges, scheduleSave])
 
   const autoArrange = useCallback(() => {
     setNodes((nds) => {
       const arranged = applyDagreLayout(nds, edges)
-      debouncedSave(arranged, edges)
+      scheduleSave(arranged, edges)
       return arranged
     })
-  }, [edges, setNodes, debouncedSave])
+  }, [edges, setNodes, scheduleSave])
 
   const replaceTree = useCallback(({ nodes: newNodes, edges: newEdges }) => {
     setNodes(newNodes)
