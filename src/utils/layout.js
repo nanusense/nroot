@@ -459,7 +459,65 @@ export function applyDagreLayout(nodes, edges, _dir, _newId) {
     if (!moved) break
   }
 
-  // ── 11. Return updated nodes ─────────────────────────────────────────────────
+  // ── 11. Snap small isolated clusters toward their nearest row neighbour ────────
+  // A couple or tiny family unit can end up in the middle of a large empty span
+  // when their structural parents are far from the sibling cluster they belong
+  // to.  When BOTH gaps (left and right) in the same generation row exceed
+  // ISLAND_GAP, slide the small group toward whichever neighbour is closer.
+  // Only clusters of ≤ 4 nodes are snapped — large subtrees stay where they
+  // were placed by the structural algorithm.
+
+  const ISLAND_GAP = NODE_W * 3.5  // ~630 px — clearly visible empty space
+
+  for (let g = 0; g <= maxGen; g++) {
+    const rowIds = nodes
+      .filter(n => gen[n.id] === g && pos[n.id] != null)
+      .map(n => n.id)
+      .sort((a, b) => pos[a].x - pos[b].x)
+
+    for (let i = 0; i < rowIds.length; i++) {
+      const id = rowIds[i]
+      const sp = spouseOf[id]
+
+      // Process only the left node of a couple (or a solo node)
+      // to avoid double-processing both spouses separately.
+      if (sp && pos[sp] && pos[sp].x < pos[id].x) continue
+
+      const sub = [...collectSubtree(id)].filter(s => pos[s])
+      if (sub.length > 4) continue  // leave large subtrees untouched
+
+      const subLeft  = Math.min(...sub.map(s => pos[s].x))
+      const subRight = Math.max(...sub.map(s => pos[s].x + NODE_W))
+      const subSet   = new Set(sub)
+
+      // Skip any row-neighbours that are themselves part of this subtree
+      // (e.g. a spouse placed immediately to the right in the same row).
+      let li = i - 1; while (li >= 0 && subSet.has(rowIds[li])) li--
+      let ri = i + 1; while (ri < rowIds.length && subSet.has(rowIds[ri])) ri++
+      const leftNeighbour  = li >= 0             ? rowIds[li] : null
+      const rightNeighbour = ri < rowIds.length  ? rowIds[ri] : null
+
+      const gapLeft  = leftNeighbour  ? subLeft  - (pos[leftNeighbour].x  + NODE_W) : Infinity
+      const gapRight = rightNeighbour ? pos[rightNeighbour].x - subRight             : Infinity
+
+      // Only snap if truly isolated on both sides
+      if (gapLeft <= ISLAND_GAP || gapRight <= ISLAND_GAP) continue
+
+      let dx
+      if (gapLeft <= gapRight) {
+        // Left neighbour is closer — snap this cluster to its right
+        dx = (pos[leftNeighbour].x + NODE_W + H_GAP) - subLeft
+      } else {
+        // Right neighbour is closer — snap this cluster to its left
+        dx = (pos[rightNeighbour].x - H_GAP) - subRight
+      }
+
+      sub.forEach(s => { pos[s] = { x: pos[s].x + dx, y: pos[s].y } })
+      rowIds.sort((a, b) => pos[a].x - pos[b].x)
+    }
+  }
+
+  // ── 12. Return updated nodes ─────────────────────────────────────────────────
 
   return nodes.map(n => ({ ...n, position: pos[n.id] ?? n.position }))
 }
