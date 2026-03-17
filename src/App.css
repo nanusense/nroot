@@ -36,6 +36,10 @@
   --font-ui:        'Plus Jakarta Sans', sans-serif;
   --shadow-node:    0 4px 24px rgba(0,0,0,0.45), 0 1px 4px rgba(0,0,0,0.3);
   --shadow-hover:   0 8px 36px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.35);
+
+  --text-light:     #f0e7d4;
+  --surface:        #122114;
+  --border:         rgba(184,144,74,0.25);
 }
 
 /* ─────────────────────────────────────────────────────────────────
