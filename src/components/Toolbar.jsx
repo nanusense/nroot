@@ -133,7 +133,7 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
   return (
     <header className="toolbar">
       <div className="toolbar__brand">
-        <span className="toolbar__icon">🔗</span>
+        <span className="toolbar__icon">🕸️</span>
         <span className="toolbar__title">NRoot</span>
         <span className="toolbar__count">{nodes.length} {nodes.length === 1 ? 'person' : 'people'}</span>
       </div>
