@@ -348,11 +348,13 @@ export function useFamilyTree({ visitorId } = {}) {
       direction === 'left'  ? EDGE_COLOR.sibling :
       EDGE_COLOR.parentChild
 
-    // Prevent duplicate edges
+    // Prevent duplicate edges (ignore isSpouseChild — a real parent-child edge can replace it)
     const alreadyLinked = edges.some(
-      (e) => (e.source === edgeSrc && e.target === edgeTgt) ||
-              (e.source === edgeTgt && e.target === edgeSrc &&
-               e.sourceHandle === 'right-source' && e.targetHandle === 'left-target')
+      (e) => !e.data?.isSpouseChild && (
+        (e.source === edgeSrc && e.target === edgeTgt) ||
+        (e.source === edgeTgt && e.target === edgeSrc &&
+         e.sourceHandle === 'right-source' && e.targetHandle === 'left-target')
+      )
     )
     if (alreadyLinked) return
 
@@ -401,7 +403,11 @@ export function useFamilyTree({ visitorId } = {}) {
       })
     }
 
-    const updatedEdges = [...edges, newEdge, ...transitiveEdges]
+    // Remove any stale isSpouseChild edge between the same pair now that a real edge exists
+    const filteredEdges = edges.filter(e =>
+      !(e.data?.isSpouseChild && e.source === edgeSrc && e.target === edgeTgt)
+    )
+    const updatedEdges = [...filteredEdges, newEdge, ...transitiveEdges]
     const layoutedNodes = applyDagreLayout(nodes, updatedEdges, 'TB', null)
     setNodes(layoutedNodes)
     setEdges(updatedEdges)
