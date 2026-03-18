@@ -84,6 +84,17 @@ function FamilyTreeApp() {
   const [selectedPersonId, setSelectedPersonId] = useState(null)
   const [focusBranchId, setFocusBranchId] = useState(null)
 
+  // First-visit pinch-to-zoom hint (mobile only)
+  const [showPinchHint, setShowPinchHint] = useState(() =>
+    window.innerWidth <= 660 && !localStorage.getItem('nroot_pinch_seen')
+  )
+  useEffect(() => {
+    if (!showPinchHint) return
+    localStorage.setItem('nroot_pinch_seen', '1')
+    const t = setTimeout(() => setShowPinchHint(false), 3500)
+    return () => clearTimeout(t)
+  }, [showPinchHint])
+
   // Hover state — drives immediate-kin dimming
   const [hoveredNodeId, setHoveredNodeId] = useState(null)
 
@@ -225,6 +236,7 @@ function FamilyTreeApp() {
           photo,
           photoUploadedBy: photo ? visitorId : null,
         }),
+        onSelect:   (id) => setSelectedPersonId(id),
         onHover:    setHoveredNodeId,
         onHoverEnd: () => setHoveredNodeId(null),
         dimmed:     immediateKin ? !immediateKin.has(node.id) : (branchSet ? !branchSet.has(node.id) : false),
@@ -391,6 +403,10 @@ function FamilyTreeApp() {
           onFocus={handlePanelFocus}
           isFocused={focusBranchId === selectedPersonId}
         />
+      )}
+
+      {showPinchHint && (
+        <div className="pinch-hint">👌 Pinch to zoom · drag to pan</div>
       )}
 
       <footer className="app-footer">

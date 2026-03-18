@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useCallback } from 'react'
 
 function PersonLink({ id, nodes, onNavigate }) {
   const person = nodes.find(n => n.id === id)
@@ -15,6 +15,19 @@ function PersonLink({ id, nodes, onNavigate }) {
 
 export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, onNavigate, isFocused }) {
   const person = nodes.find(n => n.id === personId)
+
+  // Swipe-down-to-close on mobile
+  const touchStartY = useRef(null)
+  const handleTouchStart = useCallback((e) => {
+    touchStartY.current = e.touches[0].clientY
+  }, [])
+  const handleTouchEnd = useCallback((e) => {
+    if (touchStartY.current === null) return
+    const delta = e.changedTouches[0].clientY - touchStartY.current
+    if (delta > 60) onClose()
+    touchStartY.current = null
+  }, [onClose])
+
   if (!person) return null
 
   const isSib = e =>
@@ -58,6 +71,14 @@ export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, 
 
   return (
     <div className="person-panel">
+      {/* Drag handle — visible on mobile, triggers swipe-down-to-close */}
+      <div
+        className="person-panel__drag-handle"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <span className="person-panel__drag-pill" />
+      </div>
       <div className="person-panel__header">
         {photo && (
           <img src={photo} alt={name} className="person-panel__photo" />

@@ -250,6 +250,9 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
 
       {/* Mobile search row — expands below the nav bar */}
       {mobileSearchOpen && (
+        <div className="toolbar__search-overlay" onClick={() => { setMobileSearchOpen(false); setSearchQuery(''); setSearchOpen(false) }} />
+      )}
+      {mobileSearchOpen && (
         <div className="toolbar__mobile-search-row">
           <div className="toolbar__search toolbar__search--mobile-row" ref={searchRef}>
             <input

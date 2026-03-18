@@ -318,7 +318,7 @@ body {
   position: absolute;
   top: var(--toolbar-h);
   left: 0; right: 0;
-  z-index: 101;
+  z-index: 102;
   background: rgba(10, 18, 11, 0.97);
   border-bottom: 1px solid rgba(184,144,74,0.2);
   padding: 10px 14px;
@@ -1526,6 +1526,62 @@ body {
     from { transform: translateY(100%); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
   }
+}
+
+/* Drag handle pill — visible on mobile only */
+.person-panel__drag-handle {
+  display: none;
+  justify-content: center;
+  padding: 10px 0 4px;
+  touch-action: none;
+  cursor: grab;
+  flex-shrink: 0;
+}
+.person-panel__drag-pill {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(184,144,74,0.35);
+}
+
+/* Transparent overlay behind mobile search row — tap to dismiss */
+.toolbar__search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+/* Pinch-to-zoom first-visit hint */
+.pinch-hint {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 30, 22, 0.92);
+  color: var(--gold-light);
+  border: 1px solid rgba(184,144,74,0.3);
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-family: var(--font-ui);
+  white-space: nowrap;
+  z-index: 200;
+  pointer-events: none;
+  animation: hint-fade 3.5s ease forwards;
+}
+@keyframes hint-fade {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  15%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+[data-theme="light"] .pinch-hint {
+  background: rgba(248,241,228,0.95);
+  color: var(--text-mid);
+}
+
+@media (max-width: 660px) {
+  .person-panel__drag-handle { display: flex; }
 }
 
 /* ── Relationship Finder modal ──────────────────────────────────────────────── */

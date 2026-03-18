@@ -31,7 +31,7 @@ const HANDLE_DIRS = [
 
 function PersonNode({ id, data, selected }) {
   const { name, yearOfBirth, photo, onAdd, onDelete, onUpdate, onPhotoChange, onHover, onHoverEnd, dimmed, isFocus,
-          kinRole, canDelete, canRemovePhoto, isAdmin, genLevel, genOverride, onGenChange } = data
+          kinRole, canDelete, canRemovePhoto, isAdmin, genLevel, genOverride, onGenChange, onSelect } = data
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
@@ -232,7 +232,11 @@ function PersonNode({ id, data, selected }) {
 
       {/* View mode */}
       {!editing && (
-        <div className="person-node__info" title="Double-click to edit">
+        <div
+          className="person-node__info"
+          title="Double-click to edit"
+          onClick={(e) => { e.stopPropagation(); onSelect?.(id) }}
+        >
           <span className="person-node__name">{name}</span>
           {yearOfBirth
             ? <span className="person-node__year">b. {yearOfBirth}</span>
