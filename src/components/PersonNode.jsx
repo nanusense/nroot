@@ -30,14 +30,16 @@ const HANDLE_DIRS = [
 ]
 
 function PersonNode({ id, data, selected }) {
-  const { name, yearOfBirth, onAdd, onDelete, onUpdate, onHover, onHoverEnd, dimmed, isFocus, kinRole, canDelete,
+  const { name, yearOfBirth, photo, onAdd, onDelete, onUpdate, onHover, onHoverEnd, dimmed, isFocus, kinRole, canDelete,
           isAdmin, genLevel, genOverride, onGenChange } = data
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
   const [editYear, setEditYear] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
+  const [avatarHovered, setAvatarHovered] = useState(false)
   const nameInputRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   // Reset confirm state if this node instance changes
   useEffect(() => { setShowConfirm(false) }, [id])
@@ -86,6 +88,46 @@ function PersonNode({ id, data, selected }) {
     e.stopPropagation()
     setShowConfirm(false)
   }, [])
+
+  const resizeToSquare = useCallback((file) => new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const size = 200
+      const canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      const ctx = canvas.getContext('2d')
+      const scale = Math.max(size / img.naturalWidth, size / img.naturalHeight)
+      const sw = size / scale
+      const sh = size / scale
+      const sx = (img.naturalWidth - sw) / 2
+      const sy = (img.naturalHeight - sh) / 2
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size)
+      resolve(canvas.toDataURL('image/jpeg', 0.82))
+    }
+    img.src = url
+  }), [])
+
+  const handleFileChange = useCallback(async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    const dataUrl = await resizeToSquare(file)
+    onUpdate?.(id, { photo: dataUrl })
+  }, [id, onUpdate, resizeToSquare])
+
+  const handleAvatarClick = useCallback((e) => {
+    e.stopPropagation()
+    if (editing) return
+    fileInputRef.current?.click()
+  }, [editing])
+
+  const handleRemovePhoto = useCallback((e) => {
+    e.stopPropagation()
+    onUpdate?.(id, { photo: null })
+  }, [id, onUpdate])
 
   const handleDirectionAdd = useCallback((e, dir) => {
     e.stopPropagation()
@@ -149,8 +191,38 @@ function PersonNode({ id, data, selected }) {
       )}
 
       {/* Avatar */}
-      <div className="person-node__avatar" style={{ backgroundColor: avatarColor }}>
-        {getInitials(editing ? (editName || '?') : (name || '?'))}
+      <div
+        className="person-node__avatar"
+        style={{ backgroundColor: photo ? 'transparent' : avatarColor }}
+        onClick={handleAvatarClick}
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseEnter={() => setAvatarHovered(true)}
+        onMouseLeave={() => setAvatarHovered(false)}
+      >
+        {photo
+          ? <img src={photo} alt={name} className="person-node__avatar-photo" draggable={false} />
+          : getInitials(editing ? (editName || '?') : (name || '?'))
+        }
+        {!photo && avatarHovered && !editing && !showConfirm && (
+          <span className="person-node__avatar-overlay" aria-hidden>📷</span>
+        )}
+        {photo && avatarHovered && !editing && !showConfirm && (
+          <button
+            className="person-node__avatar-remove"
+            onClick={handleRemovePhoto}
+            title="Remove photo"
+            aria-label="Remove photo"
+          >×</button>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="person-node__photo-input"
+          onChange={handleFileChange}
+          tabIndex={-1}
+          aria-hidden
+        />
       </div>
 
       {/* View mode */}

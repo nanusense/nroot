@@ -520,6 +520,64 @@ body {
   border: 2px solid var(--ivory);
   box-shadow: 0 0 0 2px var(--gold), 0 0 0 4px var(--gold-dim), 0 2px 8px rgba(0,0,0,0.2);
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+}
+
+.person-node--editing .person-node__avatar { cursor: default; }
+
+.person-node__avatar-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.person-node__avatar-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  background: rgba(0,0,0,0.38);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.person-node__avatar-remove {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(192,48,48,0.92);
+  color: #fff;
+  border: 1.5px solid #fff;
+  font-size: 11px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 5;
+  transition: background 0.12s;
+}
+.person-node__avatar-remove:hover { background: #a82020; }
+
+.person-node__photo-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 .person-node__info {
