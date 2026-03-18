@@ -1723,81 +1723,84 @@ body {
 .rfinder__chain {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   width: 100%;
-  gap: 0;
+  gap: 3px;
 }
 
-.rfinder__node {
+.rfinder__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 12px;
+  border-left: 3px solid rgba(184, 144, 74, 0.35);
+  border-radius: 0 6px 6px 0;
+  background: rgba(184, 144, 74, 0.04);
+}
+
+.rfinder__row--start,
+.rfinder__row--end {
+  border-left-color: rgba(184, 144, 74, 0.7);
+  background: rgba(184, 144, 74, 0.1);
+}
+
+.rfinder__rel-label {
+  font-size: 10px;
+  font-style: italic;
+  color: var(--text-muted);
+  min-width: 68px;
+  flex-shrink: 0;
+}
+
+.rfinder__row--start .rfinder__rel-label {
+  color: var(--gold);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.rfinder__name {
   font-family: var(--font-display);
   font-size: 14px;
   font-weight: 600;
   color: var(--text-dark);
-  background: rgba(184, 144, 74, 0.07);
-  border: 1px solid rgba(184, 144, 74, 0.25);
-  border-radius: 20px;
-  padding: 6px 16px;
-  display: inline-block;
-  max-width: 100%;
 }
 
-.rfinder__node--endpoint {
-  background: rgba(184, 144, 74, 0.18);
-  border-color: rgba(184, 144, 74, 0.55);
+.rfinder__row--start .rfinder__name,
+.rfinder__row--end .rfinder__name {
   font-size: 15px;
 }
 
-.rfinder__step {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 0;
+/* Relationship type border colours */
+.rfinder__row--parent,
+.rfinder__row--child {
+  border-left-color: #b87d2e;
+  background: rgba(184, 125, 46, 0.05);
 }
 
-.rfinder__arrow {
-  font-size: 11px;
-  color: rgba(184, 144, 74, 0.5);
-  flex-shrink: 0;
-}
-
-.rfinder__badge {
-  font-size: 10px;
-  font-style: italic;
-  padding: 2px 10px;
-  border-radius: 10px;
-  border: 1px solid currentColor;
-  flex-shrink: 0;
-}
-
-/* Relationship type colours */
-.rfinder__step--parent .rfinder__badge,
-.rfinder__step--child .rfinder__badge {
+.rfinder__row--parent .rfinder__rel-label,
+.rfinder__row--child .rfinder__rel-label {
   color: #b87d2e;
-  background: rgba(184, 125, 46, 0.07);
 }
 
-.rfinder__step--parent .rfinder__arrow,
-.rfinder__step--child .rfinder__arrow {
-  color: rgba(184, 125, 46, 0.6);
+.rfinder__row--spouse {
+  border-left-color: #b06080;
+  background: rgba(176, 96, 128, 0.05);
 }
 
-.rfinder__step--spouse .rfinder__badge {
+.rfinder__row--spouse .rfinder__rel-label {
   color: #b06080;
-  background: rgba(176, 96, 128, 0.07);
 }
 
-.rfinder__step--spouse .rfinder__arrow {
-  color: rgba(176, 96, 128, 0.6);
+.rfinder__row--sibling {
+  border-left-color: #4a8a5e;
+  background: rgba(74, 138, 94, 0.05);
 }
 
-.rfinder__step--sibling .rfinder__badge {
+.rfinder__row--sibling .rfinder__rel-label {
   color: #4a8a5e;
-  background: rgba(74, 138, 94, 0.07);
-}
-
-.rfinder__step--sibling .rfinder__arrow {
-  color: rgba(74, 138, 94, 0.6);
 }
 
 .rfinder__hops {

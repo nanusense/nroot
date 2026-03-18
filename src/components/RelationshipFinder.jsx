@@ -123,17 +123,14 @@ export default function RelationshipFinder({ isOpen, onClose, nodes, edges }) {
             ) : (
               <div className="rfinder__scroll">
                 <div className="rfinder__chain">
-                  <span className="rfinder__node rfinder__node--endpoint">{getName(path[0].from)}</span>
+                  <div className="rfinder__row rfinder__row--start">
+                    <span className="rfinder__name">{getName(path[0].from)}</span>
+                  </div>
                   {path.map((step, i) => (
-                    <Fragment key={i}>
-                      <div className={`rfinder__step rfinder__step--${step.rel.split(' ')[0]}`}>
-                        <span className="rfinder__arrow">↓</span>
-                        <span className="rfinder__badge">is {step.rel}</span>
-                        <span className={`rfinder__node${i === path.length - 1 ? ' rfinder__node--endpoint' : ''}`}>
-                          {getName(step.to)}
-                        </span>
-                      </div>
-                    </Fragment>
+                    <div key={i} className={`rfinder__row rfinder__row--${step.rel.split(' ')[0]}${i === path.length - 1 ? ' rfinder__row--end' : ''}`}>
+                      <span className="rfinder__rel-label">{step.rel}</span>
+                      <span className="rfinder__name">{getName(step.to)}</span>
+                    </div>
                   ))}
                 </div>
                 <p className="rfinder__hops">
