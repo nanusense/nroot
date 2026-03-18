@@ -1467,6 +1467,9 @@ body {
     box-shadow: 0 -6px 28px rgba(0,0,0,0.4);
     animation: panel-slide-up 0.22s ease;
   }
+  .person-panel__footer {
+    display: none;
+  }
   @keyframes panel-slide-up {
     from { transform: translateY(100%); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
