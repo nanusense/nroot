@@ -1302,11 +1302,22 @@ body {
 
 .person-panel__header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  gap: 12px;
   justify-content: space-between;
-  padding: 18px 18px 14px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+}
+
+.person-panel__photo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 0 2px rgba(184,144,74,0.2);
 }
 
 .person-panel__identity {

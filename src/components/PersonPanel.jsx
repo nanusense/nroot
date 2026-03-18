@@ -54,11 +54,14 @@ export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, 
     return { parents, children, spouses, siblings: [...siblings] }
   }, [personId, edges]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { name, yearOfBirth } = person.data
+  const { name, yearOfBirth, photo } = person.data
 
   return (
     <div className="person-panel">
       <div className="person-panel__header">
+        {photo && (
+          <img src={photo} alt={name} className="person-panel__photo" />
+        )}
         <div className="person-panel__identity">
           <h2 className="person-panel__name">{name}</h2>
           {yearOfBirth
