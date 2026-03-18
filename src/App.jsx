@@ -276,6 +276,8 @@ function FamilyTreeApp() {
           nodeColor={() => '#b8904a'}
           maskColor={theme === 'dark' ? 'rgba(14,27,16,0.75)' : 'rgba(244,240,232,0.75)'}
           style={{ bottom: 24, right: 24 }}
+          pannable
+          zoomable
         />
       </ReactFlow>
 
