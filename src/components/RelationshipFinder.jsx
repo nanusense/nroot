@@ -128,7 +128,9 @@ export default function RelationshipFinder({ isOpen, onClose, nodes, edges }) {
                   </div>
                   {path.map((step, i) => (
                     <div key={i} className={`rfinder__row rfinder__row--${step.rel.split(' ')[0]}${i === path.length - 1 ? ' rfinder__row--end' : ''}`}>
+                      <span className="rfinder__arrow-down">↓</span>
                       <span className="rfinder__rel-label">{step.rel}</span>
+                      <span className="rfinder__arrow-right">→</span>
                       <span className="rfinder__name">{getName(step.to)}</span>
                     </div>
                   ))}

@@ -1744,6 +1744,14 @@ body {
   background: rgba(184, 144, 74, 0.1);
 }
 
+.rfinder__arrow-down,
+.rfinder__arrow-right {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
 .rfinder__rel-label {
   font-size: 10px;
   font-style: italic;
