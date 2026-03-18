@@ -20,10 +20,24 @@ function generateId() {
 
 function debounce(fn, delay) {
   let timer
-  return (...args) => {
+  let lastArgs = null
+  const debounced = (...args) => {
+    lastArgs = args
     clearTimeout(timer)
-    timer = setTimeout(() => fn(...args), delay)
+    timer = setTimeout(() => {
+      lastArgs = null
+      fn(...args)
+    }, delay)
   }
+  debounced.flush = () => {
+    if (lastArgs) {
+      clearTimeout(timer)
+      const args = lastArgs
+      lastArgs = null
+      fn(...args)
+    }
+  }
+  return debounced
 }
 
 // Color scheme per relationship type
@@ -50,21 +64,35 @@ export function useFamilyTree({ visitorId } = {}) {
   // Set to true immediately on any local change so realtime doesn't overwrite pending edits.
   const isSavingRef = useRef(false)
 
-  // Debounced save — avoids hammering Supabase on every drag/position update
+  // Debounced save — avoids hammering Supabase on every drag/position update.
+  // 300 ms window is short enough that a Vite HMR reload is unlikely to interrupt it.
   const debouncedSave = useRef(
     debounce((n, e) => {
       // isSavingRef is already true (set when the change was made)
       saveTree(n, e).finally(() => {
         setTimeout(() => { isSavingRef.current = false }, 1500)
       })
-    }, 800)
+    }, 300)
   ).current
 
   // Call this instead of debouncedSave directly so isSavingRef is set immediately,
-  // protecting local state during the 800 ms debounce window.
+  // protecting local state during the debounce window.
   const scheduleSave = useCallback((n, e) => {
     isSavingRef.current = true
     debouncedSave(n, e)
+  }, [debouncedSave])
+
+  // Flush any pending debounced save immediately when the page is closed or
+  // the component unmounts (e.g. during Vite HMR). Without this, a delete/edit
+  // made just before an HMR reload would be lost and the stale Supabase data
+  // (with the old node) would be re-loaded on the next mount.
+  useEffect(() => {
+    const handleUnload = () => debouncedSave.flush()
+    window.addEventListener('beforeunload', handleUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload)
+      debouncedSave.flush() // flush on HMR unmount too
+    }
   }, [debouncedSave])
 
   // Initial load from Supabase
