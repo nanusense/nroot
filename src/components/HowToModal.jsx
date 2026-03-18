@@ -172,6 +172,13 @@ export default function HowToModal({ onClose }) {
         <footer className="howto-footer">
           Created by Sandeep Nanu. For a custom family tree like this, or to report bugs or request changes, write to{' '}
           <a href="mailto:shiftingradius@gmail.com">shiftingradius@gmail.com</a>
+          <p className="howto-footer__beer">
+            If you are happy with this site and found it useful, buy me a beer —{' '}
+            <a href="https://razorpay.me/@sandeepnanu" target="_blank" rel="noopener noreferrer">Click here</a>
+          </p>
+          <p className="howto-footer__beer-note">
+            Don't forget to add a note of your appreciation in the payment page
+          </p>
         </footer>
       </div>
     </div>

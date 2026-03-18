@@ -1328,6 +1328,16 @@ body {
 }
 .howto-footer a { color: var(--gold); text-decoration: none; }
 .howto-footer a:hover { text-decoration: underline; }
+.howto-footer__beer {
+  margin-top: 10px;
+  color: var(--text-mid);
+}
+.howto-footer__beer-note {
+  margin-top: 4px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-style: italic;
+}
 
 
 /* ── Missing birth year indicator ──────────────────────────────────────────── */
