@@ -30,8 +30,8 @@ const HANDLE_DIRS = [
 ]
 
 function PersonNode({ id, data, selected }) {
-  const { name, yearOfBirth, photo, onAdd, onDelete, onUpdate, onHover, onHoverEnd, dimmed, isFocus, kinRole, canDelete,
-          isAdmin, genLevel, genOverride, onGenChange } = data
+  const { name, yearOfBirth, photo, onAdd, onDelete, onUpdate, onPhotoChange, onHover, onHoverEnd, dimmed, isFocus,
+          kinRole, canDelete, canRemovePhoto, isAdmin, genLevel, genOverride, onGenChange } = data
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
@@ -115,8 +115,8 @@ function PersonNode({ id, data, selected }) {
     if (!file) return
     e.target.value = ''
     const dataUrl = await resizeToSquare(file)
-    onUpdate?.(id, { photo: dataUrl })
-  }, [id, onUpdate, resizeToSquare])
+    onPhotoChange?.(id, dataUrl)
+  }, [id, onPhotoChange, resizeToSquare])
 
   const handleAvatarClick = useCallback((e) => {
     e.stopPropagation()
@@ -126,8 +126,8 @@ function PersonNode({ id, data, selected }) {
 
   const handleRemovePhoto = useCallback((e) => {
     e.stopPropagation()
-    onUpdate?.(id, { photo: null })
-  }, [id, onUpdate])
+    onPhotoChange?.(id, null)
+  }, [id, onPhotoChange])
 
   const handleDirectionAdd = useCallback((e, dir) => {
     e.stopPropagation()
@@ -219,7 +219,7 @@ function PersonNode({ id, data, selected }) {
             aria-hidden
           />
         </div>
-        {photo && avatarHovered && !editing && !showConfirm && (
+        {photo && avatarHovered && !editing && !showConfirm && canRemovePhoto && (
           <button
             className="person-node__avatar-remove"
             onClick={handleRemovePhoto}

@@ -209,6 +209,8 @@ function FamilyTreeApp() {
   const nodesWithCallbacks = useMemo(() => nodes.map((node) => {
     // canDelete: own nodes, admin, or legacy nodes with no createdBy tag
     const canDelete = isAdmin || !node.data.createdBy || node.data.createdBy === visitorId
+    // canRemovePhoto: photo uploader, admin, or no uploader recorded (legacy)
+    const canRemovePhoto = isAdmin || !node.data.photoUploadedBy || node.data.photoUploadedBy === visitorId
     return {
       ...node,
       data: {
@@ -219,12 +221,17 @@ function FamilyTreeApp() {
         },
         onUpdate:   updatePerson,
         onDelete:   deletePerson,
+        onPhotoChange: (id, photo) => updatePerson(id, {
+          photo,
+          photoUploadedBy: photo ? visitorId : null,
+        }),
         onHover:    setHoveredNodeId,
         onHoverEnd: () => setHoveredNodeId(null),
         dimmed:     immediateKin ? !immediateKin.has(node.id) : (branchSet ? !branchSet.has(node.id) : false),
         isFocus:    node.id === hoveredNodeId,
         kinRole:    null,
         canDelete,
+        canRemovePhoto,
         isAdmin,
         genLevel:    node.data.genOverride ?? Math.round(node.position.y / ROW_H) + 1,
         genOverride: node.data.genOverride ?? null,
