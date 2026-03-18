@@ -183,8 +183,8 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
 
         <div className="toolbar__divider" />
 
-        <button className="btn btn--ghost" onClick={onFindConnection} title="Find how two people are related">
-          Find connection
+        <button className="btn btn--ghost" onClick={onFindConnection} title="Trace how two people are connected">
+          Trace Connects
         </button>
 
         <button className="btn btn--ghost" onClick={onHowTo} title="How to use">
@@ -291,7 +291,7 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
             </div>
             <div className="toolbar__divider" />
             <button className="btn btn--ghost" onClick={() => { onFindConnection(); closeMenu() }}>
-              Find connection
+              Trace Connects
             </button>
             <button className="btn btn--ghost" onClick={() => { onHowTo(); closeMenu() }}>
               How to
