@@ -127,13 +127,15 @@ export function useFamilyTree({ visitorId } = {}) {
         const newLabel = normaliseLabel(edge.label, isSib)
         return newLabel !== edge.label ? { ...edge, label: newLabel } : edge
       })
-      // Self-healing: add any missing spouseChild edges.
+      // Self-healing: add any missing parent-child edges for spouses.
       // Happens when a spouse was linked after children already existed.
-      const scStyle = { stroke: '#88c090', strokeWidth: 1, strokeDasharray: '3 5', opacity: 0.55 }
-      const existingScPairs = new Set(
-        normalisedEdges.filter(e2 => e2.data?.isSpouseChild).map(e2 => `${e2.source}|${e2.target}`)
+      // Spouses are treated as co-parents by default.
+      const existingParentChildPairs = new Set(
+        normalisedEdges
+          .filter(e2 => e2.sourceHandle === 'bottom-source' && e2.targetHandle === 'top-target' && !e2.data?.isSpouseChild)
+          .map(e2 => `${e2.source}|${e2.target}`)
       )
-      const addedScEdges = []
+      const addedCoParentEdges = []
       Object.entries(parentOf).forEach(([childId, parentIds]) => {
         [...parentIds].forEach(parentId => {
           normalisedEdges.forEach(e2 => {
@@ -144,24 +146,23 @@ export function useFamilyTree({ visitorId } = {}) {
             if (!spouseId) return
             if ([...parentIds].includes(spouseId)) return // already a real parent
             const key = `${spouseId}|${childId}`
-            if (!existingScPairs.has(key)) {
-              addedScEdges.push({
-                id: `sc_${spouseId}_${childId}`,
+            if (!existingParentChildPairs.has(key)) {
+              addedCoParentEdges.push({
+                id: `e_${spouseId}_${childId}`,
                 source: spouseId, target: childId,
                 sourceHandle: 'bottom-source', targetHandle: 'top-target',
                 type: 'smoothstep', label: '',
-                style: scStyle,
-                data: { isSpouseChild: true },
+                style: { stroke: '#c4a882', strokeWidth: 2 },
               })
-              existingScPairs.add(key)
+              existingParentChildPairs.add(key)
             }
           })
         })
       })
-      const healedEdges = addedScEdges.length > 0 ? [...normalisedEdges, ...addedScEdges] : normalisedEdges
+      const healedEdges = addedCoParentEdges.length > 0 ? [...normalisedEdges, ...addedCoParentEdges] : normalisedEdges
       const hadChanges = cleanedEdges.length < e.length ||
         normalisedEdges.some((edge, i) => edge.label !== cleanedEdges[i].label) ||
-        addedScEdges.length > 0
+        addedCoParentEdges.length > 0
       setNodes(n)
       setEdges(healedEdges)
       setLoading(false)
@@ -262,27 +263,20 @@ export function useFamilyTree({ visitorId } = {}) {
       return spouseIds
     }
 
-    // When adding a spouse: auto-connect them to the parent's existing children.
-    // spouseChild edges are intentionally subtle (thin + semi-transparent) so they
-    // don't visually compete with the primary parent→child lines.
-    const spouseChildStyle = {
-      stroke: EDGE_COLOR.spouseChild,
-      strokeWidth: 1,
-      strokeDasharray: '3 5',
-      opacity: 0.55,
-    }
+    // When adding a spouse: auto-connect them as a real parent to the other person's
+    // existing children. A spouse is assumed to be a co-parent by default.
     const autoSpouseChildEdges = []
     if (direction === 'right' && sourceId) {
       edges.filter(
-        (e) => e.source === sourceId && e.sourceHandle === 'bottom-source' && !e.data?.isSibling
+        (e) => e.source === sourceId && e.sourceHandle === 'bottom-source' && !e.data?.isSibling && !e.data?.isSpouseChild
       ).forEach((e) => {
         autoSpouseChildEdges.push({
-          id: `sc_${id}_${e.target}`,
+          id: `e_${id}_${e.target}`,
           source: id, target: e.target,
           sourceHandle: 'bottom-source', targetHandle: 'top-target',
           type: 'smoothstep', label: '',
-          style: spouseChildStyle,
-          data: { isSpouseChild: true },
+          ...labelProps,
+          style: { stroke: EDGE_COLOR.parentChild, strokeWidth: 2 },
         })
       })
     }
@@ -337,15 +331,15 @@ export function useFamilyTree({ visitorId } = {}) {
         })
       })
 
-      // Connect new child to existing spouses of the parent
+      // Connect new child to existing spouses of the parent as real parent-child edges
       spousesOf(sourceId).forEach((spouseId) => {
         autoSpouseChildEdges.push({
-          id: `sc_${spouseId}_${id}`,
+          id: `e_${spouseId}_${id}`,
           source: spouseId, target: id,
           sourceHandle: 'bottom-source', targetHandle: 'top-target',
           type: 'smoothstep', label: '',
-          style: spouseChildStyle,
-          data: { isSpouseChild: true },
+          ...labelProps,
+          style: { stroke: EDGE_COLOR.parentChild, strokeWidth: 2 },
         })
       })
     }
@@ -464,11 +458,39 @@ export function useFamilyTree({ visitorId } = {}) {
       })
     }
 
+    // When linking as spouse, auto-add real parent-child edges to the other person's children
+    const autoCoParentEdges = []
+    if (direction === 'right') {
+      // For each of sourceId's children, link targetId as co-parent (and vice versa)
+      const addCoParentEdges = (parentId, newParentId) => {
+        edges.forEach(e => {
+          if (e.source !== parentId || e.sourceHandle !== 'bottom-source') return
+          if (e.data?.isSibling || e.data?.isSpouseChild) return
+          const childId = e.target
+          const alreadyLinked = edges.some(ex =>
+            ex.source === newParentId && ex.target === childId && ex.sourceHandle === 'bottom-source'
+          )
+          if (!alreadyLinked) {
+            autoCoParentEdges.push({
+              id: `e_${newParentId}_${childId}`,
+              source: newParentId, target: childId,
+              sourceHandle: 'bottom-source', targetHandle: 'top-target',
+              type: 'smoothstep', label: '',
+              ...labelProps,
+              style: { stroke: EDGE_COLOR.parentChild, strokeWidth: 2 },
+            })
+          }
+        })
+      }
+      addCoParentEdges(sourceId, targetId)
+      addCoParentEdges(targetId, sourceId)
+    }
+
     // Remove any stale isSpouseChild edge between the same pair now that a real edge exists
     const filteredEdges = edges.filter(e =>
       !(e.data?.isSpouseChild && e.source === edgeSrc && e.target === edgeTgt)
     )
-    const updatedEdges = [...filteredEdges, newEdge, ...transitiveEdges]
+    const updatedEdges = [...filteredEdges, newEdge, ...transitiveEdges, ...autoCoParentEdges]
     const layoutedNodes = applyDagreLayout(nodes, updatedEdges, 'TB', null)
     setNodes(layoutedNodes)
     setEdges(updatedEdges)
