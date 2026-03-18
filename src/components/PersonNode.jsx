@@ -192,37 +192,42 @@ function PersonNode({ id, data, selected }) {
 
       {/* Avatar */}
       <div
-        className="person-node__avatar"
-        style={{ backgroundColor: photo ? 'transparent' : avatarColor }}
-        onClick={handleAvatarClick}
-        onPointerDown={(e) => e.stopPropagation()}
+        className="person-node__avatar-wrap"
         onMouseEnter={() => setAvatarHovered(true)}
         onMouseLeave={() => setAvatarHovered(false)}
       >
-        {photo
-          ? <img src={photo} alt={name} className="person-node__avatar-photo" draggable={false} />
-          : getInitials(editing ? (editName || '?') : (name || '?'))
-        }
-        {!photo && avatarHovered && !editing && !showConfirm && (
-          <span className="person-node__avatar-overlay" aria-hidden>📷</span>
-        )}
+        <div
+          className="person-node__avatar"
+          style={{ backgroundColor: photo ? 'transparent' : avatarColor }}
+          onClick={handleAvatarClick}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {photo
+            ? <img src={photo} alt={name} className="person-node__avatar-photo" draggable={false} />
+            : getInitials(editing ? (editName || '?') : (name || '?'))
+          }
+          {!photo && avatarHovered && !editing && !showConfirm && (
+            <span className="person-node__avatar-overlay" aria-hidden>📷</span>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="person-node__photo-input"
+            onChange={handleFileChange}
+            tabIndex={-1}
+            aria-hidden
+          />
+        </div>
         {photo && avatarHovered && !editing && !showConfirm && (
           <button
             className="person-node__avatar-remove"
             onClick={handleRemovePhoto}
+            onPointerDown={(e) => e.stopPropagation()}
             title="Remove photo"
             aria-label="Remove photo"
           >×</button>
         )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="person-node__photo-input"
-          onChange={handleFileChange}
-          tabIndex={-1}
-          aria-hidden
-        />
       </div>
 
       {/* View mode */}

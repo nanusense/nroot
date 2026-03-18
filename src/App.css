@@ -503,6 +503,12 @@ body {
 }
 .person-node__confirm-no:hover { background: var(--ivory-border); }
 
+/* Avatar wrapper — positions the remove button without clipping it */
+.person-node__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
 /* Avatar — double ring "cameo" style */
 .person-node__avatar {
   width: 50px;
