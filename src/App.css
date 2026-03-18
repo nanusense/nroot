@@ -185,7 +185,7 @@ body {
 .toolbar {
   position: absolute;
   top: 0; left: 0; right: 0;
-  z-index: 10;
+  z-index: 110;
   height: var(--toolbar-h);
   display: flex;
   align-items: center;
@@ -1547,7 +1547,8 @@ body {
 /* Transparent overlay behind mobile search row — tap to dismiss */
 .toolbar__search-overlay {
   position: fixed;
-  inset: 0;
+  top: var(--toolbar-h);
+  left: 0; right: 0; bottom: 0;
   z-index: 100;
 }
 
