@@ -1,4 +1,76 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+
+function PersonSearch({ nodes, value, onChange, placeholder = 'Search by name…', autoFocus }) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(!!autoFocus)
+  const containerRef = useRef(null)
+
+  const selected = nodes.find(n => n.id === value)
+  const filtered = query.trim()
+    ? nodes.filter(n => n.data.name.toLowerCase().includes(query.toLowerCase()))
+    : nodes
+
+  const label = n => `${n.data.name}${n.data.yearOfBirth ? ` · b. ${n.data.yearOfBirth}` : ''}`
+
+  // Open immediately if autoFocus (browser focuses before React attaches handlers)
+  useEffect(() => { if (autoFocus) setOpen(true) }, [autoFocus])
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false)
+        setQuery('')
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const handleSelect = (id) => {
+    onChange(id)
+    setOpen(false)
+    setQuery('')
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') { setOpen(false); setQuery('') }
+    if (e.key === 'Enter' && filtered.length === 1) { e.preventDefault(); handleSelect(filtered[0].id) }
+  }
+
+  return (
+    <div className="psearch" ref={containerRef}>
+      <input
+        className="modal__input psearch__input"
+        type="text"
+        value={open ? query : (selected ? label(selected) : '')}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        onKeyDown={handleKeyDown}
+        placeholder={selected ? label(selected) : placeholder}
+        autoFocus={autoFocus}
+        autoComplete="off"
+      />
+      {open && (
+        <ul className="psearch__list">
+          {filtered.length === 0 && (
+            <li className="psearch__empty">No match</li>
+          )}
+          {filtered.map(n => (
+            <li
+              key={n.id}
+              className={`psearch__item${n.id === value ? ' psearch__item--active' : ''}`}
+              onMouseDown={() => handleSelect(n.id)}
+            >
+              <span className="psearch__name">{n.data.name}</span>
+              {n.data.yearOfBirth && <span className="psearch__year">b. {n.data.yearOfBirth}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 const DIR_META = {
   above: { label: 'Adding Parent ↑' },
@@ -172,37 +244,25 @@ export default function AddPersonModal({ isOpen, onClose, onSubmit, onLink, sour
               {allNodes.length > 0 && (
                 <label className="modal__label">
                   Connect to
-                  <select
-                    className="modal__input modal__select"
+                  <PersonSearch
+                    nodes={allNodes}
                     value={sourceId}
-                    onChange={(e) => handleSourceChange(e.target.value)}
-                  >
-                    <option value="">— No connection (standalone) —</option>
-                    {allNodes.map((n) => (
-                      <option key={n.id} value={n.id}>
-                        {n.data.name}{n.data.yearOfBirth ? ` (b. ${n.data.yearOfBirth})` : ''}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={handleSourceChange}
+                    placeholder="— No connection (standalone) —"
+                  />
                 </label>
               )}
             </>
           ) : (
             <label className="modal__label">
               Person to link
-              <select
-                className="modal__input modal__select"
+              <PersonSearch
+                nodes={linkableNodes}
                 value={existingTargetId}
-                onChange={(e) => setExistingTargetId(e.target.value)}
+                onChange={setExistingTargetId}
+                placeholder="Search by name…"
                 autoFocus
-              >
-                <option value="">— Select person —</option>
-                {linkableNodes.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    {n.data.name}{n.data.yearOfBirth ? ` (b. ${n.data.yearOfBirth})` : ''}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
           )}
 
