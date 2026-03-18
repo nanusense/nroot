@@ -127,12 +127,45 @@ export function useFamilyTree({ visitorId } = {}) {
         const newLabel = normaliseLabel(edge.label, isSib)
         return newLabel !== edge.label ? { ...edge, label: newLabel } : edge
       })
+      // Self-healing: add any missing spouseChild edges.
+      // Happens when a spouse was linked after children already existed.
+      const scStyle = { stroke: '#88c090', strokeWidth: 1, strokeDasharray: '3 5', opacity: 0.55 }
+      const existingScPairs = new Set(
+        normalisedEdges.filter(e2 => e2.data?.isSpouseChild).map(e2 => `${e2.source}|${e2.target}`)
+      )
+      const addedScEdges = []
+      Object.entries(parentOf).forEach(([childId, parentIds]) => {
+        [...parentIds].forEach(parentId => {
+          normalisedEdges.forEach(e2 => {
+            if (e2.sourceHandle !== 'right-source' || e2.targetHandle !== 'left-target') return
+            if (isSibE(e2) || e2.data?.isDivorced) return
+            const spouseId = e2.source === parentId ? e2.target
+              : e2.target === parentId ? e2.source : null
+            if (!spouseId) return
+            if ([...parentIds].includes(spouseId)) return // already a real parent
+            const key = `${spouseId}|${childId}`
+            if (!existingScPairs.has(key)) {
+              addedScEdges.push({
+                id: `sc_${spouseId}_${childId}`,
+                source: spouseId, target: childId,
+                sourceHandle: 'bottom-source', targetHandle: 'top-target',
+                type: 'smoothstep', label: '',
+                style: scStyle,
+                data: { isSpouseChild: true },
+              })
+              existingScPairs.add(key)
+            }
+          })
+        })
+      })
+      const healedEdges = addedScEdges.length > 0 ? [...normalisedEdges, ...addedScEdges] : normalisedEdges
       const hadChanges = cleanedEdges.length < e.length ||
-        normalisedEdges.some((edge, i) => edge.label !== cleanedEdges[i].label)
+        normalisedEdges.some((edge, i) => edge.label !== cleanedEdges[i].label) ||
+        addedScEdges.length > 0
       setNodes(n)
-      setEdges(normalisedEdges)
+      setEdges(healedEdges)
       setLoading(false)
-      if (hadChanges) saveTree(n, normalisedEdges)
+      if (hadChanges) saveTree(n, healedEdges)
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
