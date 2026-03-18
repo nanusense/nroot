@@ -121,19 +121,18 @@ export default function RelationshipFinder({ isOpen, onClose, nodes, edges }) {
             ) : path.length === 0 ? (
               <p className="rfinder__same">That&apos;s the same person!</p>
             ) : (
-              <>
+              <div className="rfinder__scroll">
                 <div className="rfinder__chain">
                   <span className="rfinder__node rfinder__node--endpoint">{getName(path[0].from)}</span>
                   {path.map((step, i) => (
                     <Fragment key={i}>
-                      <div className={`rfinder__connector rfinder__connector--${step.rel.split(' ')[0]}`}>
-                        <div className="rfinder__cline" />
+                      <div className={`rfinder__step rfinder__step--${step.rel.split(' ')[0]}`}>
+                        <span className="rfinder__arrow">↓</span>
                         <span className="rfinder__badge">is {step.rel}</span>
-                        <div className="rfinder__cline rfinder__cline--arrow" />
+                        <span className={`rfinder__node${i === path.length - 1 ? ' rfinder__node--endpoint' : ''}`}>
+                          {getName(step.to)}
+                        </span>
                       </div>
-                      <span className={`rfinder__node${i === path.length - 1 ? ' rfinder__node--endpoint' : ''}`}>
-                        {getName(step.to)}
-                      </span>
                     </Fragment>
                   ))}
                 </div>
@@ -142,7 +141,7 @@ export default function RelationshipFinder({ isOpen, onClose, nodes, edges }) {
                     ? 'Direct connection'
                     : `${path.length} step${path.length > 1 ? 's' : ''} apart`}
                 </p>
-              </>
+              </div>
             )}
           </div>
         )}
