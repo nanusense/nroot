@@ -76,6 +76,54 @@ export default function HowToModal({ onClose }) {
             </p>
           </section>
 
+          {/* Person profile panel */}
+          <section className="howto-section">
+            <h3 className="howto-section__title">Person profile panel</h3>
+            <p>
+              Click any card to open a profile panel on the side. It lists all of that
+              person's connections: parents, spouse, children, and siblings. Click any name
+              in the panel to jump straight to their card on the canvas. Click the same card
+              again, or anywhere on the background, to close the panel.
+            </p>
+          </section>
+
+          {/* Focus branch */}
+          <section className="howto-section">
+            <h3 className="howto-section__title">Focus branch</h3>
+            <p>
+              Inside the profile panel, tap <strong>Focus branch</strong> to dim everyone
+              outside that person's lineage. Only their ancestors, descendants, and spouses
+              stay fully visible. This is useful for studying one family line without the
+              distraction of the full tree. Tap <strong>Clear focus</strong> to return to
+              the normal view.
+            </p>
+          </section>
+
+          {/* Trace Connects */}
+          <section className="howto-section">
+            <h3 className="howto-section__title">Trace Connects</h3>
+            <p>
+              Wondering how two people in the tree are related? Click <strong>Trace Connects</strong>{' '}
+              in the toolbar, pick any two people using the search boxes, and click <strong>Find</strong>.
+              The result shows the shortest relationship path between them, for example:
+              "Nanu Puthiyandi is parent of Sandeep Nanu". If no connection exists between
+              the two people, that is shown as well.
+            </p>
+          </section>
+
+          {/* Photos */}
+          <section className="howto-section">
+            <h3 className="howto-section__title">Adding a photo</h3>
+            <p>
+              Hover over the circular avatar on any card and click the camera icon that
+              appears. Pick any photo from your device. It is automatically cropped and
+              resized to a square before saving, so even a large image uploads quickly.
+              To remove a photo you added, hover the avatar and click the small red
+              <strong> x</strong> button that appears in the corner. Only the person who
+              uploaded the photo (or an admin) can remove it.
+            </p>
+          </section>
+
           {/* Hover highlights */}
           <section className="howto-section">
             <h3 className="howto-section__title">Hover highlights</h3>
@@ -112,6 +160,8 @@ export default function HowToModal({ onClose }) {
             <ul className="howto-tips">
               <li>You can drag any card to reposition it freely on the canvas.</li>
               <li>Use the scroll wheel (or pinch on mobile) to zoom in and out.</li>
+              <li>The small corner map at the bottom right is clickable. Drag or click inside it to jump to any part of the tree.</li>
+              <li>Cards without a birth year show "Add birth year" as a reminder. Birth years help tell apart people with the same name when linking.</li>
               <li>Click the <strong>×</strong> on a card to remove that person. You will be asked to confirm first.</li>
               <li>Changes are saved automatically and shared in real time, and anyone with the link sees the same tree.</li>
             </ul>
