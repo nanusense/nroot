@@ -67,10 +67,13 @@ export default function HowToModal({ onClose }) {
             <ol className="howto-steps">
               <li>Click any arrow button (↑ ↓ → ←) on one of the cards.</li>
               <li>In the panel that opens, switch from <strong>New person</strong> to <strong>Link existing</strong>.</li>
-              <li>Choose the person you want to connect from the dropdown.</li>
+              <li>Start typing a name in the search box — the list filters as you type.</li>
               <li>Pick the relationship type and label, then click <strong>Link</strong>.</li>
             </ol>
             <p>This draws the correct line between the two without creating a duplicate card.</p>
+            <p className="howto-tip-inline">
+              <strong>Tip:</strong> If two people share the same name, the search shows each person's birth year next to their name so you can tell them apart. This is why it is worth adding a birth year to every person in the tree — it makes linking unambiguous.
+            </p>
           </section>
 
           {/* Hover highlights */}
@@ -89,6 +92,17 @@ export default function HowToModal({ onClose }) {
               If the tree looks cluttered after many additions, click <strong>Auto-arrange</strong>{' '}
               in the toolbar. It repositions everyone into clean generation rows,
               grandparents at the top, parents in the middle, children at the bottom.
+            </p>
+          </section>
+
+          {/* Search */}
+          <section className="howto-section">
+            <h3 className="howto-section__title">Finding someone quickly</h3>
+            <p>
+              With a large tree it can be hard to spot a specific person by scrolling. Use the
+              {' '}<strong>search bar</strong> in the toolbar to jump straight to anyone by name —
+              type a few letters, pick the person from the results, and the canvas will pan and
+              zoom directly to their card.
             </p>
           </section>
 

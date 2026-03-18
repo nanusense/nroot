@@ -1181,6 +1181,17 @@ body {
 }
 .howto-steps li { margin-bottom: 5px; }
 
+.howto-tip-inline {
+  margin-top: 10px;
+  padding: 10px 13px;
+  background: rgba(184,144,74,0.08);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-dark);
+}
+
 .howto-tips {
   padding-left: 20px;
   margin: 6px 0 0;
