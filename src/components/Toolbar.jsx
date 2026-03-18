@@ -8,6 +8,8 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
   const [pinOpen, setPinOpen] = useState(false)
   const [pinValue, setPinValue] = useState('')
   const [pinError, setPinError] = useState(false)
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const mobileSearchInputRef = useRef(null)
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('')
@@ -223,49 +225,76 @@ export default function Toolbar({ nodes, edges, onAddRoot, onAutoArrange, onExpo
         )}
       </div>
 
+      {/* Mobile search icon */}
+      <button
+        className="toolbar__mobile-search-btn"
+        onClick={() => {
+          setMobileSearchOpen(v => !v)
+          setMenuOpen(false)
+          setTimeout(() => mobileSearchInputRef.current?.focus(), 50)
+        }}
+        aria-label="Search"
+      >
+        🔍
+      </button>
+
       {/* Mobile hamburger */}
       <button
         className="toolbar__hamburger"
-        onClick={() => setMenuOpen((v) => !v)}
+        onClick={() => { setMenuOpen((v) => !v); setMobileSearchOpen(false) }}
         aria-label="Menu"
         aria-expanded={menuOpen}
       >
         <span /><span /><span />
       </button>
 
+      {/* Mobile search row — expands below the nav bar */}
+      {mobileSearchOpen && (
+        <div className="toolbar__mobile-search-row">
+          <div className="toolbar__search toolbar__search--mobile-row" ref={searchRef}>
+            <input
+              ref={mobileSearchInputRef}
+              className="toolbar__search-input"
+              type="search"
+              placeholder="Search by name…"
+              value={searchQuery}
+              onChange={handleSearchInput}
+              onFocus={() => searchQuery && setSearchOpen(true)}
+              autoComplete="off"
+            />
+            {searchOpen && searchResults.length > 0 && (
+              <ul className="toolbar__search-results">
+                {searchResults.map(n => (
+                  <li key={n.id}>
+                    <button
+                      className="toolbar__search-result"
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        handleSearchSelect(n.id)
+                        setMobileSearchOpen(false)
+                      }}
+                    >
+                      <span className="toolbar__search-name">{n.data.name}</span>
+                      {n.data.yearOfBirth && (
+                        <span className="toolbar__search-year">b. {n.data.yearOfBirth}</span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {searchOpen && searchQuery.trim() && searchResults.length === 0 && (
+              <div className="toolbar__search-empty">No results</div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Mobile dropdown */}
       {menuOpen && (
         <>
           <div className="toolbar__overlay" onClick={closeMenu} />
           <div className="toolbar__mobile-menu">
-            <div className="toolbar__search toolbar__search--mobile" ref={null}>
-              <input
-                className="toolbar__search-input"
-                type="search"
-                placeholder="Search by name…"
-                value={searchQuery}
-                onChange={handleSearchInput}
-                onFocus={() => searchQuery && setSearchOpen(true)}
-                autoComplete="off"
-              />
-              {searchOpen && searchResults.length > 0 && (
-                <ul className="toolbar__search-results">
-                  {searchResults.map(n => (
-                    <li key={n.id}>
-                      <button
-                        className="toolbar__search-result"
-                        onMouseDown={(e) => { e.preventDefault(); handleSearchSelect(n.id); closeMenu() }}
-                      >
-                        <span className="toolbar__search-name">{n.data.name}</span>
-                        {n.data.yearOfBirth && (
-                          <span className="toolbar__search-year">b. {n.data.yearOfBirth}</span>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
             <button className="btn btn--primary" onClick={() => { onAddRoot(); closeMenu() }}>
               + Add Person
             </button>
