@@ -259,8 +259,9 @@ export function useFamilyTree({ visitorId } = {}) {
       const existingChildren = edges.filter(
         (e) =>
           e.source === sourceId &&
-          (e.sourceHandle === 'bottom-source' || e.sourceHandle == null) &&
-          !e.data?.isSibling
+          e.sourceHandle === 'bottom-source' &&
+          !e.data?.isSibling &&
+          !e.data?.isSpouseChild
       )
       existingChildren.forEach((e) => {
         autoSiblingEdges.push({
@@ -313,7 +314,9 @@ export function useFamilyTree({ visitorId } = {}) {
       const alreadyParentChild = edges.some(e =>
         ((e.source === sourceId && e.target === targetId) ||
          (e.source === targetId && e.target === sourceId)) &&
-        e.sourceHandle === 'bottom-source'
+        !e.data?.isSibling &&
+        e.sourceHandle !== 'right-source' &&
+        e.targetHandle !== 'left-target'
       )
       if (alreadyParentChild) return
     }
