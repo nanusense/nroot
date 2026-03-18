@@ -1702,8 +1702,9 @@ body {
 .rfinder__chain {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  width: 100%;
   gap: 0;
-  align-items: flex-start;
 }
 
 .rfinder__node {
@@ -1711,46 +1712,83 @@ body {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-dark);
-  background: rgba(184,144,74,0.1);
-  border: 1px solid rgba(184,144,74,0.25);
-  border-radius: 6px;
-  padding: 5px 10px;
+  background: rgba(184, 144, 74, 0.07);
+  border: 1px solid rgba(184, 144, 74, 0.25);
+  border-radius: 20px;
+  padding: 6px 18px;
   display: inline-block;
+  text-align: center;
+  max-width: 100%;
 }
 
-.rfinder__step {
+.rfinder__node--endpoint {
+  background: rgba(184, 144, 74, 0.18);
+  border-color: rgba(184, 144, 74, 0.55);
+  font-size: 15px;
+}
+
+.rfinder__connector {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0;
 }
 
-.rfinder__rel {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-style: italic;
-  padding: 3px 12px;
-  position: relative;
+.rfinder__cline {
+  width: 1px;
+  height: 10px;
+  background: rgba(184, 144, 74, 0.35);
 }
 
-.rfinder__rel::before {
-  content: '';
-  position: absolute;
-  left: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 100%;
-  background: var(--gold);
-  opacity: 0.3;
+.rfinder__cline--arrow::after {
+  content: '▾';
+  display: block;
+  font-size: 9px;
+  color: rgba(184, 144, 74, 0.5);
+  margin-top: -3px;
+  line-height: 1;
+  text-align: center;
+}
+
+.rfinder__badge {
+  font-size: 10px;
+  font-style: italic;
+  padding: 2px 10px;
+  border-radius: 10px;
+  border: 1px solid currentColor;
+}
+
+/* Relationship type colours */
+.rfinder__connector--parent .rfinder__badge,
+.rfinder__connector--child .rfinder__badge {
+  color: #b87d2e;
+  background: rgba(184, 125, 46, 0.07);
+}
+
+.rfinder__connector--spouse .rfinder__badge {
+  color: #b06080;
+  background: rgba(176, 96, 128, 0.07);
+}
+
+.rfinder__connector--sibling .rfinder__badge {
+  color: #4a8a5e;
+  background: rgba(74, 138, 94, 0.07);
+}
+
+.rfinder__connector--spouse .rfinder__cline {
+  background: rgba(176, 96, 128, 0.3);
+}
+
+.rfinder__connector--sibling .rfinder__cline {
+  background: rgba(74, 138, 94, 0.3);
 }
 
 .rfinder__hops {
-  margin-top: 10px;
+  margin-top: 12px;
   font-size: 12px;
   color: var(--gold);
   font-style: italic;
-  text-align: right;
+  text-align: center;
 }
 
 .rfinder__none,

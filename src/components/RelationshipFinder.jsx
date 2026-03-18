@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, Fragment } from 'react'
 import PersonSearch from './PersonSearch'
 
 const isSib = e =>
@@ -123,12 +123,18 @@ export default function RelationshipFinder({ isOpen, onClose, nodes, edges }) {
             ) : (
               <>
                 <div className="rfinder__chain">
-                  <span className="rfinder__node">{getName(path[0].from)}</span>
+                  <span className="rfinder__node rfinder__node--endpoint">{getName(path[0].from)}</span>
                   {path.map((step, i) => (
-                    <span key={i} className="rfinder__step">
-                      <span className="rfinder__rel">is {step.rel}</span>
-                      <span className="rfinder__node">{getName(step.to)}</span>
-                    </span>
+                    <Fragment key={i}>
+                      <div className={`rfinder__connector rfinder__connector--${step.rel.split(' ')[0]}`}>
+                        <div className="rfinder__cline" />
+                        <span className="rfinder__badge">is {step.rel}</span>
+                        <div className="rfinder__cline rfinder__cline--arrow" />
+                      </div>
+                      <span className={`rfinder__node${i === path.length - 1 ? ' rfinder__node--endpoint' : ''}`}>
+                        {getName(step.to)}
+                      </span>
+                    </Fragment>
                   ))}
                 </div>
                 <p className="rfinder__hops">
