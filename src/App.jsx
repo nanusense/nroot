@@ -299,7 +299,7 @@ function FamilyTreeApp() {
     return (
       <div className="app app--loading">
         <div className="loading-screen">
-          <span className="loading-icon">🔗</span>
+          <span className="loading-icon">🕸️</span>
           <p className="loading-text">Loading your family map…</p>
         </div>
       </div>
