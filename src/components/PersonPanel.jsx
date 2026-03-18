@@ -1,4 +1,4 @@
-import { useMemo, useRef, useCallback } from 'react'
+import { useMemo, useRef, useCallback, useState, useEffect } from 'react'
 
 function PersonLink({ id, nodes, onNavigate }) {
   const person = nodes.find(n => n.id === id)
@@ -13,8 +13,19 @@ function PersonLink({ id, nodes, onNavigate }) {
   )
 }
 
-export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, onNavigate, isFocused }) {
+export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, onNavigate, isFocused, onUpdateEdge }) {
   const person = nodes.find(n => n.id === personId)
+  const [menuOpenFor, setMenuOpenFor] = useState(null)
+
+  // Close mini-menu on outside click
+  useEffect(() => {
+    if (!menuOpenFor) return
+    const handler = (e) => {
+      if (!e.target.closest('.person-panel__spouse-menu-wrap')) setMenuOpenFor(null)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [menuOpenFor])
 
   // Swipe-down-to-close on mobile
   const touchStartY = useRef(null)
@@ -32,7 +43,7 @@ export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, 
 
   const isSib = e =>
     e.data?.isSibling ||
-    (e.sourceHandle === 'right-source' && e.targetHandle === 'left-target' && !!e.style?.strokeDasharray)
+    (e.sourceHandle === 'right-source' && e.targetHandle === 'left-target' && !!e.style?.strokeDasharray && !e.data?.isDivorced)
   const isSpouse = e =>
     e.sourceHandle === 'right-source' && e.targetHandle === 'left-target' && !isSib(e)
 
@@ -66,6 +77,24 @@ export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, 
 
     return { parents, children, spouses, siblings: [...siblings] }
   }, [personId, edges]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const getSpouseEdge = (spouseId) =>
+    edges.find(e =>
+      isSpouse(e) &&
+      ((e.source === personId && e.target === spouseId) ||
+       (e.source === spouseId && e.target === personId))
+    )
+
+  const toggleDivorce = (spouseId) => {
+    const edge = getSpouseEdge(spouseId)
+    if (!edge || !onUpdateEdge) return
+    const isDivorced = edge.data?.isDivorced
+    onUpdateEdge(edge.id, isDivorced
+      ? { label: 'Spouse',   style: { stroke: '#e0728a', strokeWidth: 2 },                            data: { isDivorced: false } }
+      : { label: 'Divorced', style: { stroke: '#9e9e9e', strokeWidth: 1.5, strokeDasharray: '5 4' }, data: { isDivorced: true  } }
+    )
+    setMenuOpenFor(null)
+  }
 
   const { name, yearOfBirth, photo } = person.data
 
@@ -106,9 +135,32 @@ export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, 
         {rels.spouses.length > 0 && (
           <section className="person-panel__section">
             <h3 className="person-panel__section-title">Spouse</h3>
-            {rels.spouses.map(id => (
-              <PersonLink key={id} id={id} nodes={nodes} onNavigate={onNavigate} />
-            ))}
+            {rels.spouses.map(id => {
+              const spouseEdge = getSpouseEdge(id)
+              const isDivorced = spouseEdge?.data?.isDivorced
+              return (
+                <div key={id} className="person-panel__spouse-row">
+                  <PersonLink id={id} nodes={nodes} onNavigate={onNavigate} />
+                  {isDivorced && <span className="person-panel__divorced-tag">divorced</span>}
+                  {onUpdateEdge && (
+                    <div className="person-panel__spouse-menu-wrap">
+                      <button
+                        className="person-panel__spouse-menu-btn"
+                        onClick={() => setMenuOpenFor(menuOpenFor === id ? null : id)}
+                        title="Relationship options"
+                      >···</button>
+                      {menuOpenFor === id && (
+                        <div className="person-panel__spouse-mini-menu">
+                          <button onClick={() => toggleDivorce(id)}>
+                            {isDivorced ? 'Restore as spouse' : 'Mark as divorced'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </section>
         )}
 

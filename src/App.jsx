@@ -65,6 +65,7 @@ function FamilyTreeApp() {
     updatePerson,
     deletePerson,
     deleteEdge,
+    updateEdge,
     autoArrange,
     replaceTree,
     exportJSON,
@@ -113,7 +114,7 @@ function FamilyTreeApp() {
   // Detect sibling edges: flagged explicitly, OR legacy dashed horizontal edges
   const isSibEdge = (e) =>
     e.data?.isSibling ||
-    (e.sourceHandle === 'right-source' && e.targetHandle === 'left-target' && !!e.style?.strokeDasharray)
+    (e.sourceHandle === 'right-source' && e.targetHandle === 'left-target' && !!e.style?.strokeDasharray && !e.data?.isDivorced)
   const isSpouseEdgeGlobal = (e) =>
     e.sourceHandle === 'right-source' && e.targetHandle === 'left-target' && !isSibEdge(e)
 
@@ -402,6 +403,7 @@ function FamilyTreeApp() {
           onNavigate={handlePanelNavigate}
           onFocus={handlePanelFocus}
           isFocused={focusBranchId === selectedPersonId}
+          onUpdateEdge={updateEdge}
         />
       )}
 

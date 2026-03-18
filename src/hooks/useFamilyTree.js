@@ -100,7 +100,7 @@ export function useFamilyTree({ visitorId } = {}) {
     loadTree().then(({ nodes: n, edges: e }) => {
       // Self-healing: remove spouseChild edges that have no valid step-parent relationship.
       // A valid sc edge A→C requires: a parent P where P→C exists AND a real spouse edge A↔P.
-      const isSibE = (edge) => edge.data?.isSibling || !!edge.style?.strokeDasharray
+      const isSibE = (edge) => edge.data?.isSibling || (!!edge.style?.strokeDasharray && !edge.data?.isDivorced)
       const parentOf = {}   // childId → Set of parentIds
       e.forEach(edge => {
         if (edge.sourceHandle === 'bottom-source' && edge.targetHandle === 'top-target' && !edge.data?.isSpouseChild) {
@@ -123,7 +123,7 @@ export function useFamilyTree({ visitorId } = {}) {
       // "Wife"/"Husband" → "Spouse", "Brother"/"Sister" → "Sibling",
       // and sibling edges with no label → "Sibling"
       const normalisedEdges = cleanedEdges.map(edge => {
-        const isSib = edge.data?.isSibling || !!edge.style?.strokeDasharray
+        const isSib = edge.data?.isSibling || (!!edge.style?.strokeDasharray && !edge.data?.isDivorced)
         const newLabel = normaliseLabel(edge.label, isSib)
         return newLabel !== edge.label ? { ...edge, label: newLabel } : edge
       })
@@ -221,7 +221,7 @@ export function useFamilyTree({ visitorId } = {}) {
       const spouseIds = []
       edges.forEach((e) => {
         if (e.sourceHandle !== 'right-source' || e.targetHandle !== 'left-target') return
-        const isSib = e.data?.isSibling || !!e.style?.strokeDasharray
+        const isSib = e.data?.isSibling || (!!e.style?.strokeDasharray && !e.data?.isDivorced)
         if (isSib) return
         if (e.source === personId) spouseIds.push(e.target)
         else if (e.target === personId) spouseIds.push(e.source)
@@ -474,6 +474,20 @@ export function useFamilyTree({ visitorId } = {}) {
     })
   }, [nodes, setNodes, setEdges, scheduleSave])
 
+  const updateEdge = useCallback((edgeId, updates) => {
+    setEdges((eds) => {
+      const updated = eds.map(e => {
+        if (e.id !== edgeId) return e
+        const merged = { ...e, ...updates }
+        // Merge data but fully replace style (so strokeDasharray gets cleaned up on restore)
+        if (updates.data !== undefined) merged.data = { ...e.data, ...updates.data }
+        return merged
+      })
+      scheduleSave(nodes, updated)
+      return updated
+    })
+  }, [nodes, setEdges, scheduleSave])
+
   const autoArrange = useCallback(() => {
     setNodes((nds) => {
       const arranged = applyDagreLayout(nds, edges)
@@ -491,7 +505,7 @@ export function useFamilyTree({ visitorId } = {}) {
   return {
     nodes, edges, loading,
     onNodesChange, onEdgesChange, onConnect,
-    addPerson, linkPersons, updatePerson, deletePerson, deleteEdge, autoArrange, replaceTree,
+    addPerson, linkPersons, updatePerson, deletePerson, deleteEdge, updateEdge, autoArrange, replaceTree,
     exportJSON: () => exportJSON(nodes, edges),
     importJSON,
   }

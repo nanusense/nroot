@@ -1478,6 +1478,84 @@ body {
   white-space: nowrap;
 }
 
+/* Spouse row with divorce toggle */
+.person-panel__spouse-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.person-panel__spouse-row .person-panel__link {
+  flex: 1;
+  margin-bottom: 0;
+}
+.person-panel__divorced-tag {
+  font-size: 10px;
+  font-style: italic;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.person-panel__spouse-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.person-panel__spouse-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px 5px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.12s, background 0.12s;
+}
+.person-panel__spouse-row:hover .person-panel__spouse-menu-btn {
+  display: block;
+}
+.person-panel__spouse-menu-btn:hover {
+  color: var(--text-light);
+  background: rgba(255,255,255,0.07);
+}
+.person-panel__spouse-mini-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--surface-raised, #2a2420);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 4px;
+  z-index: 20;
+  min-width: 148px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+.person-panel__spouse-mini-menu button {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 12.5px;
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.person-panel__spouse-mini-menu button:hover {
+  background: rgba(184,144,74,0.15);
+}
+[data-theme="light"] .person-panel__spouse-mini-menu {
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+[data-theme="light"] .person-panel__spouse-mini-menu button { color: var(--text-dark); }
+@media (max-width: 660px) {
+  .person-panel__spouse-menu-btn { display: none !important; }
+}
+
 .person-panel__empty {
   font-size: 13px;
   font-style: italic;
