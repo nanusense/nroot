@@ -13,6 +13,8 @@ import '@xyflow/react/dist/style.css'
 import { useFamilyTree } from './hooks/useFamilyTree'
 import PersonNode from './components/PersonNode'
 import AddPersonModal from './components/AddPersonModal'
+import PersonPanel from './components/PersonPanel'
+import RelationshipFinder from './components/RelationshipFinder'
 import Toolbar from './components/Toolbar'
 import HowToModal from './components/HowToModal'
 import './App.css'
@@ -76,6 +78,11 @@ function FamilyTreeApp() {
   const [modalDirection, setModalDirection] = useState('')
 
   const [howToOpen, setHowToOpen] = useState(false)
+  const [finderOpen, setFinderOpen] = useState(false)
+
+  // Panel + branch focus
+  const [selectedPersonId, setSelectedPersonId] = useState(null)
+  const [focusBranchId, setFocusBranchId] = useState(null)
 
   // Hover state — drives immediate-kin dimming
   const [hoveredNodeId, setHoveredNodeId] = useState(null)
@@ -164,6 +171,31 @@ function FamilyTreeApp() {
     return set
   }, [hoveredNodeId, edges])
 
+  // ── Branch focus (highlight ancestors + descendants + spouses) ────────────
+  const branchSet = useMemo(() => {
+    if (!focusBranchId) return null
+    const set = new Set([focusBranchId])
+    const queue = [focusBranchId]
+    while (queue.length) {
+      const id = queue.shift()
+      edges.forEach(e => {
+        if (isSibEdge(e) || isSpouseEdgeGlobal(e)) return
+        if (e.source === id && !set.has(e.target)) { set.add(e.target); queue.push(e.target) }
+        if (e.target === id && !set.has(e.source)) { set.add(e.source); queue.push(e.source) }
+      })
+    }
+    // add spouses of every included node
+    const members = [...set]
+    members.forEach(id => {
+      edges.forEach(e => {
+        if (!isSpouseEdgeGlobal(e)) return
+        if (e.source === id && !set.has(e.target)) set.add(e.target)
+        if (e.target === id && !set.has(e.source)) set.add(e.source)
+      })
+    })
+    return set
+  }, [focusBranchId, edges]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Admin: shift a person's generation by ±1 (stored as 1-based genOverride)
   const ROW_H = 226 // must match layout.js NODE_H + V_GAP
   const handleGenChange = useCallback((nodeId, delta) => {
@@ -189,7 +221,7 @@ function FamilyTreeApp() {
         onDelete:   deletePerson,
         onHover:    setHoveredNodeId,
         onHoverEnd: () => setHoveredNodeId(null),
-        dimmed:     immediateKin ? !immediateKin.has(node.id) : false,
+        dimmed:     immediateKin ? !immediateKin.has(node.id) : (branchSet ? !branchSet.has(node.id) : false),
         isFocus:    node.id === hoveredNodeId,
         kinRole:    null,
         canDelete,
@@ -199,13 +231,14 @@ function FamilyTreeApp() {
         onGenChange: (delta) => handleGenChange(node.id, delta),
       },
     }
-  }), [nodes, visitorId, isAdmin, openModal, updatePerson, deletePerson, immediateKin, hoveredNodeId, handleGenChange])
+  }), [nodes, visitorId, isAdmin, openModal, updatePerson, deletePerson, immediateKin, branchSet, hoveredNodeId, handleGenChange])
 
-  // ── Edges with dimming on hover ────────────────────────────────────────────
+  // ── Edges with dimming on hover / branch focus ────────────────────────────
   const displayEdges = useMemo(() => {
-    if (!immediateKin) return edges
+    const activeSet = immediateKin ?? branchSet
+    if (!activeSet) return edges
     return edges.map(e => {
-      const isKinEdge = immediateKin.has(e.source) && immediateKin.has(e.target)
+      const isKinEdge = activeSet.has(e.source) && activeSet.has(e.target)
       return {
         ...e,
         label: isKinEdge ? e.label : '',
@@ -215,7 +248,7 @@ function FamilyTreeApp() {
         },
       }
     })
-  }, [edges, immediateKin])
+  }, [edges, immediateKin, branchSet])
 
   // Search: pan + zoom to the found node
   const handleSearchSelect = useCallback((nodeId) => {
@@ -228,6 +261,25 @@ function FamilyTreeApp() {
       )
     }
   }, [getNode, setCenter])
+
+  // Panel: open by clicking a node (toggle)
+  const onNodeClick = useCallback((_, node) => {
+    setSelectedPersonId(prev => prev === node.id ? null : node.id)
+  }, [])
+
+  // Panel: navigate to a relative (pan canvas + switch panel)
+  const handlePanelNavigate = useCallback((nodeId) => {
+    const node = getNode(nodeId)
+    if (node) {
+      setCenter(node.position.x + 90, node.position.y + 48, { zoom: 1.5, duration: 600 })
+    }
+    setSelectedPersonId(nodeId)
+  }, [getNode, setCenter])
+
+  // Panel: focus/clear branch
+  const handlePanelFocus = useCallback((id) => {
+    setFocusBranchId(id)
+  }, [])
 
   const onEdgeClick = useCallback((_, edge) => {
     if (!isAdmin) return
@@ -255,7 +307,9 @@ function FamilyTreeApp() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
+        onPaneClick={() => setSelectedPersonId(null)}
         nodeTypes={nodeTypes}
         fitView
         fitViewOptions={{ padding: 0.3 }}
@@ -292,6 +346,7 @@ function FamilyTreeApp() {
         isAdmin={isAdmin}
         onUnlockAdmin={unlockAdmin}
         onLockAdmin={lockAdmin}
+        onFindConnection={() => setFinderOpen(true)}
         onHowTo={() => setHowToOpen(true)}
         onSearchSelect={handleSearchSelect}
         theme={theme}
@@ -309,6 +364,27 @@ function FamilyTreeApp() {
       />
 
       {howToOpen && <HowToModal onClose={() => setHowToOpen(false)} />}
+
+      {finderOpen && (
+        <RelationshipFinder
+          isOpen={finderOpen}
+          onClose={() => setFinderOpen(false)}
+          nodes={nodes}
+          edges={edges}
+        />
+      )}
+
+      {selectedPersonId && (
+        <PersonPanel
+          personId={selectedPersonId}
+          nodes={nodes}
+          edges={edges}
+          onClose={() => setSelectedPersonId(null)}
+          onNavigate={handlePanelNavigate}
+          onFocus={handlePanelFocus}
+          isFocused={focusBranchId === selectedPersonId}
+        />
+      )}
 
       <footer className="app-footer">
         Best viewed on a large screen.{' '}

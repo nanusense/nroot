@@ -888,12 +888,16 @@ body {
   font-size: 14px;
   color: var(--text-dark);
   flex: 1;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .psearch__year {
   font-family: var(--font-ui);
   font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
+  text-transform: none;
+  letter-spacing: 0;
 }
 .psearch__empty {
   padding: 10px 14px;
@@ -1209,6 +1213,281 @@ body {
 .howto-footer a { color: var(--gold); text-decoration: none; }
 .howto-footer a:hover { text-decoration: underline; }
 
+
+/* ── Missing birth year indicator ──────────────────────────────────────────── */
+.person-node__year--missing {
+  color: rgba(154, 132, 104, 0.55);
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* ── Person profile side panel ──────────────────────────────────────────────── */
+.person-panel {
+  position: fixed;
+  top: var(--toolbar-h);
+  right: 0;
+  bottom: 0;
+  width: 272px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  box-shadow: -6px 0 28px rgba(0,0,0,0.4);
+  animation: panel-slide-in 0.22s ease;
+}
+
+@keyframes panel-slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.person-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.person-panel__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.person-panel__name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text-light);
+  line-height: 1.25;
+  word-break: break-word;
+  margin: 0;
+}
+
+.person-panel__year {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-mid);
+  margin: 0;
+}
+
+.person-panel__year--missing {
+  color: rgba(154, 132, 104, 0.5);
+}
+
+.person-panel__close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  flex-shrink: 0;
+  margin-left: 8px;
+  margin-top: -2px;
+  transition: color 0.15s;
+}
+.person-panel__close:hover { color: var(--text-light); }
+
+.person-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.person-panel__section {}
+
+.person-panel__section-title {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--gold);
+  margin: 0 0 7px;
+  opacity: 0.75;
+}
+
+.person-panel__link {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s;
+}
+.person-panel__link:hover {
+  background: rgba(184,144,74,0.12);
+  border-color: rgba(184,144,74,0.25);
+}
+
+.person-panel__link-name {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  color: var(--text-light);
+  flex: 1;
+}
+
+.person-panel__link-year {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-mid);
+  white-space: nowrap;
+}
+
+.person-panel__empty {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 20px 0;
+}
+
+.person-panel__footer {
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.person-panel__footer .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Light theme overrides for panel */
+[data-theme="light"] .person-panel {
+  background: var(--surface);
+  border-left-color: var(--border);
+}
+[data-theme="light"] .person-panel__name { color: var(--text-dark); }
+[data-theme="light"] .person-panel__link { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.07); }
+[data-theme="light"] .person-panel__link:hover { background: rgba(184,144,74,0.1); }
+[data-theme="light"] .person-panel__link-name { color: var(--text-dark); }
+
+@media (max-width: 660px) {
+  .person-panel {
+    width: 100%;
+    top: auto;
+    bottom: 0;
+    height: 55vh;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -6px 28px rgba(0,0,0,0.4);
+    animation: panel-slide-up 0.22s ease;
+  }
+  @keyframes panel-slide-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+}
+
+/* ── Relationship Finder modal ──────────────────────────────────────────────── */
+.rfinder {
+  max-width: 500px;
+}
+
+.rfinder__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 480px) {
+  .rfinder__row { grid-template-columns: 1fr; }
+}
+
+.rfinder__actions {
+  justify-content: flex-end;
+}
+
+.rfinder__result {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ivory-border);
+}
+
+.rfinder__chain {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: flex-start;
+}
+
+.rfinder__node {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+  background: rgba(184,144,74,0.1);
+  border: 1px solid rgba(184,144,74,0.25);
+  border-radius: 6px;
+  padding: 5px 10px;
+  display: inline-block;
+}
+
+.rfinder__step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.rfinder__rel {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 3px 12px;
+  position: relative;
+}
+
+.rfinder__rel::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 100%;
+  background: var(--gold);
+  opacity: 0.3;
+}
+
+.rfinder__hops {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--gold);
+  font-style: italic;
+  text-align: right;
+}
+
+.rfinder__none,
+.rfinder__same {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 0;
+}
+
+.rfinder__none strong { color: var(--text-mid); font-style: normal; }
 
 /* ── Search widget ──────────────────────────────────────────────────────────── */
 

@@ -157,7 +157,10 @@ function PersonNode({ id, data, selected }) {
       {!editing && (
         <div className="person-node__info" title="Double-click to edit">
           <span className="person-node__name">{name}</span>
-          {yearOfBirth && <span className="person-node__year">b. {yearOfBirth}</span>}
+          {yearOfBirth
+            ? <span className="person-node__year">b. {yearOfBirth}</span>
+            : <span className="person-node__year person-node__year--missing" title="Birth year not set">Add birth year</span>
+          }
         </div>
       )}
 
