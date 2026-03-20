@@ -141,6 +141,15 @@ export default function HowToModal({ onClose }) {
               in the toolbar. It repositions everyone into clean generation rows,
               grandparents at the top, parents in the middle, children at the bottom.
             </p>
+            <p className="howto-tip-inline">
+              <strong>Why is someone placed far from their family?</strong> In a large tree,
+              the layout algorithm's first priority is to prevent cards from overlapping each other.
+              To achieve this, it sometimes has to place a card further from its direct relatives
+              than you might expect, especially in busy generations where many branches meet.
+              This is intentional. No matter how far apart two people appear on the canvas,
+              you can always click either card to open their profile panel, then click any
+              name in the panel to jump directly to that person.
+            </p>
           </section>
 
           {/* Search */}
