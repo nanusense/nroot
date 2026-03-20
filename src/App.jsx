@@ -214,7 +214,7 @@ function FamilyTreeApp() {
     const node = nodes.find(n => n.id === nodeId)
     if (!node) return
     const current = node.data.genOverride ?? Math.round(node.position.y / ROW_H) + 1
-    updatePerson(nodeId, { genOverride: Math.max(1, current + delta) })
+    updatePerson(nodeId, { genOverride: current + delta })
   }, [nodes, updatePerson])
 
   // ── Nodes with callbacks + highlight state ────────────────────────────────
