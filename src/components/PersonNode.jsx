@@ -31,7 +31,8 @@ const HANDLE_DIRS = [
 
 function PersonNode({ id, data, selected }) {
   const { name, yearOfBirth, photo, onAdd, onDelete, onUpdate, onPhotoChange, onHover, onHoverEnd, dimmed, isFocus,
-          kinRole, canDelete, canRemovePhoto, isAdmin, genLevel, genOverride, onGenChange, onSelect } = data
+          kinRole, canDelete, canRemovePhoto, isAdmin, genLevel, genOverride, onGenChange, onSelect,
+          triggerEdit, onEditDone } = data
 
   const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState('')
@@ -43,6 +44,16 @@ function PersonNode({ id, data, selected }) {
 
   // Reset confirm state if this node instance changes
   useEffect(() => { setShowConfirm(false) }, [id])
+
+  // Trigger edit from PersonPanel
+  useEffect(() => {
+    if (triggerEdit && !editing) {
+      setEditName(name)
+      setEditYear(yearOfBirth ?? '')
+      setEditing(true)
+      onEditDone?.()
+    }
+  }, [triggerEdit]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const initials = getInitials(name || '?')
   const avatarColor = hashColor(editing ? editName || name : name)

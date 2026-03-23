@@ -13,7 +13,7 @@ function PersonLink({ id, nodes, onNavigate }) {
   )
 }
 
-export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, onNavigate, isFocused, onUpdateEdge }) {
+export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, onNavigate, isFocused, onUpdateEdge, onEditNode }) {
   const person = nodes.find(n => n.id === personId)
   const [menuOpenFor, setMenuOpenFor] = useState(null)
 
@@ -189,6 +189,11 @@ export default function PersonPanel({ personId, nodes, edges, onClose, onFocus, 
       </div>
 
       <div className="person-panel__footer">
+        {onEditNode && (
+          <button className="btn btn--secondary" onClick={() => onEditNode(personId)}>
+            Edit name / year
+          </button>
+        )}
         <button
           className={`btn ${isFocused ? 'btn--primary' : 'btn--secondary'}`}
           onClick={() => onFocus(isFocused ? null : personId)}

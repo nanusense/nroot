@@ -38,6 +38,7 @@ function FamilyTreeApp() {
   // Admin unlock state — stored in sessionStorage so it survives page refresh
   // within the same tab but resets when the tab is closed.
   const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('nroot_admin') === '1')
+  const [nodeToEdit, setNodeToEdit] = useState(null)
 
   const unlockAdmin = useCallback((pin) => {
     if (ADMIN_PIN && pin === ADMIN_PIN) {
@@ -249,9 +250,11 @@ function FamilyTreeApp() {
         genLevel:    node.data.genOverride ?? Math.round(node.position.y / ROW_H) + 1,
         genOverride: node.data.genOverride ?? null,
         onGenChange: (delta) => handleGenChange(node.id, delta),
+        triggerEdit: nodeToEdit === node.id,
+        onEditDone:  () => setNodeToEdit(null),
       },
     }
-  }), [nodes, visitorId, isAdmin, openModal, updatePerson, deletePerson, immediateKin, branchSet, hoveredNodeId, handleGenChange])
+  }), [nodes, visitorId, isAdmin, openModal, updatePerson, deletePerson, immediateKin, branchSet, hoveredNodeId, handleGenChange, nodeToEdit])
 
   // ── Edges with dimming on hover / branch focus ────────────────────────────
   const displayEdges = useMemo(() => {
@@ -324,6 +327,7 @@ function FamilyTreeApp() {
       <ReactFlow
         nodes={nodesWithCallbacks}
         edges={displayEdges}
+        nodeDragThreshold={4}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -404,6 +408,7 @@ function FamilyTreeApp() {
           onFocus={handlePanelFocus}
           isFocused={focusBranchId === selectedPersonId}
           onUpdateEdge={updateEdge}
+          onEditNode={(id) => setNodeToEdit(id)}
         />
       )}
 

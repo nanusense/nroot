@@ -835,7 +835,7 @@ body {
   justify-content: center;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s, transform 0.1s, background 0.15s;
+  transition: opacity 0.15s 80ms, transform 0.1s, background 0.15s;
   line-height: 1;
   z-index: 10;
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
@@ -857,15 +857,11 @@ body {
 
 /* Larger touch targets on mobile */
 @media (max-width: 660px) {
-  .handle-add-btn {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
-  }
-  .handle-add-btn--above { top: -18px; }
-  .handle-add-btn--below { bottom: -18px; }
-  .handle-add-btn--right { right: -18px; }
-  .handle-add-btn--left  { left: -18px; }
+  .handle-add-btn { width: 40px; height: 40px; font-size: 16px; transition-delay: 0ms; }
+  .handle-add-btn--above { top: -22px; }
+  .handle-add-btn--below { bottom: -22px; }
+  .handle-add-btn--right { right: -22px; }
+  .handle-add-btn--left  { left: -22px; }
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -1107,6 +1103,9 @@ body {
   fill: rgba(10,18,11,0.6) !important;
 }
 
+.react-flow__node { cursor: grab; }
+.react-flow__node.dragging { cursor: grabbing; }
+
 .react-flow__controls {
   border-radius: 10px;
   overflow: hidden;
@@ -1123,6 +1122,19 @@ body {
 .react-flow__controls-button:hover {
   background: rgba(60, 85, 62, 0.98);
   fill: var(--gold-light);
+}
+
+[data-theme="light"] .react-flow__controls-button {
+  background: rgba(30,25,20,0.82);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  fill: rgba(240,236,226,0.90);
+}
+[data-theme="light"] .react-flow__controls-button:hover {
+  background: rgba(30,25,20,0.96);
+  fill: var(--coral-lt);
+}
+[data-theme="light"] .react-flow__controls {
+  border-color: rgba(30,25,20,0.35);
 }
 
 /* ── Admin lock button ─────────────────────────────────────────────────── */
@@ -1578,6 +1590,9 @@ body {
   padding: 12px 18px 16px;
   border-top: 1px solid var(--border);
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .person-panel__footer .btn {
@@ -1600,16 +1615,15 @@ body {
     width: 100%;
     top: auto;
     bottom: 0;
-    height: 55vh;
+    height: 42vh;
     border-left: none;
     border-top: 1px solid var(--border);
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -6px 28px rgba(0,0,0,0.4);
     animation: panel-slide-up 0.22s ease;
   }
-  .person-panel__footer {
-    display: none;
-  }
+  .person-panel__footer { flex-direction: row; padding: 8px 12px 10px; gap: 6px; }
+  .person-panel__footer .btn { font-size: 12px; padding: 7px 10px; }
   @keyframes panel-slide-up {
     from { transform: translateY(100%); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
